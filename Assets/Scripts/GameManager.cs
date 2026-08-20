@@ -62,10 +62,21 @@ public class GameManager : MonoBehaviour
 
     [Header("Lives & Score System")]
     public int lives = 3;
-    public GameObject[] heartIcons;
+    [Tooltip("Không dùng nữa, chờ xoá khi UI mới hoàn thiện")]
+    public GameObject[] heartIcons; 
+    [Header("Lives Display (mới)")]
+    public TMPro.TextMeshProUGUI livesCountText;
     public TextMeshProUGUI scoreText;
     private int currentScore = 0;
     private int displayedScore = 0;
+
+    [Header("Timer System")]
+    private float currentTime;
+    private bool isTimerRunning = false;
+    private int timeLimitSeconds = 0;
+    
+    [Header("Timer Display (mới)")]
+    public TMPro.TextMeshProUGUI timerText;
 
     [Header("Audio System")]
     public AudioSource sfxSource;
@@ -86,10 +97,46 @@ public class GameManager : MonoBehaviour
     private const float doubleClickThreshold = 0.3f;
     private int lastRow = -1;
     private int lastCol = -1;
+    private Color defaultTimerColor = Color.white;
+
+    void Update()
+    {
+        if (!isTimerRunning || isGameOver) return;
+        
+        currentTime -= Time.deltaTime;
+
+   
+        if (timerText != null)
+        {
+            int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
+            
+     
+            int minutes = secondsLeft / 60;
+            int seconds = secondsLeft % 60;
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+            
+            if (secondsLeft <= 5)
+                timerText.color = Color.red;
+            else
+                timerText.color = defaultTimerColor;
+        }
+
+        if (currentTime <= 0f)
+        {
+            currentTime = 0f;
+            isTimerRunning = false;
+            Debug.Log("[Timer] Hết giờ! Game Over.");
+            GameOver(); // hết giờ = thua NGAY, không trừ mạng
+        }
+    }
 
     void Start()
     {
-        
+        if (timerText != null)
+        {
+            defaultTimerColor = timerText.color;
+        }
+
         if (Camera.main != null && Camera.main.GetComponent<UnityEngine.EventSystems.Physics2DRaycaster>() == null)
         {
             Camera.main.gameObject.AddComponent<UnityEngine.EventSystems.Physics2DRaycaster>();
@@ -231,13 +278,14 @@ public class GameManager : MonoBehaviour
         if (restartButton != null) restartButton.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
 
-        for (int i = 0; i < heartIcons.Length; i++)
-        {
-            if (heartIcons[i] != null) heartIcons[i].SetActive(true);
-        }
+        // heartIcons không dùng nữa
+        // for (int i = 0; i < heartIcons.Length; i++)
+        // {
+        //     if (heartIcons[i] != null) heartIcons[i].SetActive(true);
+        // }
+        // PlayHeartEntranceAnimation();
 
-        // Chạy animation tim: pop-in entrance → heartbeat idle
-        PlayHeartEntranceAnimation();
+        if (livesCountText != null) livesCountText.text = "x" + lives;
 
         if (currentBoardInstance != null)
         {
@@ -269,16 +317,19 @@ public class GameManager : MonoBehaviour
         bool[,] parsedSolution;
         try
         {
-            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols, out parsedSolution);
+            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols, out parsedSolution, out timeLimitSeconds);
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"[GameManager] {ex.Message}");
-            return;
+            Debug.LogError($"[GameManager] Lỗi load level: {ex.Message}");
+            return; // hoặc xử lý fallback phù hợp — không để game crash/treo
         }
 
         bool isBoardValid = currentBoardView.InitializeBoard(this, parsedGrid, currentRows, currentCols);
         if (!isBoardValid) return;
+
+        currentTime = timeLimitSeconds;
+        isTimerRunning = true;
 
         gridData = parsedGrid;
         solutionCells = parsedSolution;
@@ -360,37 +411,13 @@ public class GameManager : MonoBehaviour
             AddScore(100);
             PlaySFX(placeMonsterSound);
 
-            if (placedMonstersCount >= GetRequiredMonstersCount()) GameWin();
+            if (placedMonstersCount >= CountTotalSolutionCells()) GameWin();
         }
         else
         {
             lives--;
 
-            if (lives >= 0 && lives < heartIcons.Length && heartIcons[lives] != null)
-            {
-                GameObject heart = heartIcons[lives];
-
-                // Kill cả idle heartbeat lẫn tween cũ trước khi chạy animation mất tim
-                heart.transform.DOKill();
-
-                // Flash đỏ → shake → scale về 0 → tắt
-                UnityEngine.UI.Image heartImg = heart.GetComponent<UnityEngine.UI.Image>();
-                Sequence loseSeq = DOTween.Sequence();
-
-                if (heartImg != null)
-                    loseSeq.Join(heartImg.DOColor(new Color(1f, 0.15f, 0.15f), 0.08f)
-                                        .SetLoops(2, LoopType.Yoyo));
-
-                loseSeq.Append(heart.transform.DOShakeRotation(0.35f, new Vector3(0, 0, 35), 18, 90, false));
-                loseSeq.Append(heart.transform.DOScale(Vector3.zero, 0.22f).SetEase(Ease.InBack));
-                loseSeq.OnComplete(() =>
-                {
-                    heart.SetActive(false);
-                    heart.transform.localScale    = Vector3.one;
-                    heart.transform.localRotation = Quaternion.identity;
-                    if (heartImg != null) heartImg.color = Color.white; // reset màu
-                });
-            }
+            if (livesCountText != null) livesCountText.text = "x" + lives;
 
             PlaySFX(errorSound);
             if (!isVibrationOff) Handheld.Vibrate();
@@ -419,6 +446,7 @@ public class GameManager : MonoBehaviour
     void GameOver()
     {
         isGameOver = true;
+        isTimerRunning = false;
         PlaySFX(loseSound);
 
         Sequence gameOverSeq = DOTween.Sequence().SetUpdate(true); 
@@ -502,6 +530,7 @@ public class GameManager : MonoBehaviour
     void GameWin()
     {
         isGameOver = true;
+        isTimerRunning = false;
         int bonusScore = 500 + (lives * 100);
         AddScore(bonusScore);
         if (winScreenUI != null) 
@@ -560,27 +589,20 @@ public class GameManager : MonoBehaviour
 
     bool IsValidPlacement(int targetRow, int targetCol, int targetBiomeID)
     {
+        // Đã chuyển sang kiểm tra theo đáp án cố định (solutionCells) thay vì
+        // check rule hàng/cột/vùng/kề cạnh như trước — người thiết kế level
+        // phải tự đảm bảo đáp án tuân đúng luật khi viết file text.
         if (targetBiomeID == 0) return false;
-        if (solutionCells == null) return false;
-
-        // Fixed solution check: correct only if this cell is marked with '*' in the level file
         return solutionCells[targetRow, targetCol];
     }
 
-    int GetRequiredMonstersCount()
+    int CountTotalSolutionCells()
     {
-        HashSet<int> biomes = new HashSet<int>();
+        int count = 0;
         for (int r = 0; r < currentRows; r++)
-        {
             for (int c = 0; c < currentCols; c++)
-            {
-                if (gridData[r, c] > 0)
-                {
-                    biomes.Add(gridData[r, c]);
-                }
-            }
-        }
-        return biomes.Count;
+                if (solutionCells[r, c]) count++;
+        return count;
     }
 
     public bool IsGameOver()

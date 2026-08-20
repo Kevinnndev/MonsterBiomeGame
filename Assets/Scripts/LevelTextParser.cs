@@ -4,13 +4,14 @@ using System;
 
 public static class LevelTextParser
 {
-   
-    public static int[,] Parse(string textContent, out int rows, out int cols, out bool[,] solutionCells)
+    public static int[,] Parse(string textContent, out int rows, out int cols, out bool[,] solutionCells, out int timeLimitSeconds)
     {
         string[] rawLines = textContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         List<int[]> rowList = new List<int[]>();
         List<bool[]> solutionRowList = new List<bool[]>();
         int? expectedColCount = null;
+        
+        timeLimitSeconds = -1;
 
         for (int i = 0; i < rawLines.Length; i++)
         {
@@ -18,6 +19,21 @@ public static class LevelTextParser
 
             if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
                 continue;
+
+            // Xử lý dòng TIME:
+            if (line.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase))
+            {
+                string timeStr = line.Substring(5).Trim();
+                if (int.TryParse(timeStr, out int timeVal) && timeVal > 0)
+                {
+                    timeLimitSeconds = timeVal;
+                }
+                else
+                {
+                    throw new Exception($"LỖI PARSE: Dòng TIME không hợp lệ '{line}'. Giá trị thời gian phải là số nguyên dương!");
+                }
+                continue;
+            }
 
             string[] rawValues = line.Split(new char[] { ' ', '\t', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -46,8 +62,22 @@ public static class LevelTextParser
 
                 if (int.TryParse(token, out int biomeId))
                 {
+                    if (biomeId < 0)
+                    {
+                        Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: biomeId '{biomeId}' là số âm, tự chuyển thành ô 0.");
+                    }
+                    
                     columns[j] = Mathf.Max(0, biomeId);
-                    solutionColumns[j] = isCorrectCell;
+                    
+                    if (columns[j] == 0 && isCorrectCell)
+                    {
+                        Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: Ô trống (0) được đánh dấu là đáp án (*). Đã tự động huỷ đánh dấu.");
+                        solutionColumns[j] = false;
+                    }
+                    else
+                    {
+                        solutionColumns[j] = isCorrectCell;
+                    }
                 }
                 else
                 {
@@ -61,9 +91,14 @@ public static class LevelTextParser
             solutionRowList.Add(solutionColumns);
         }
 
+        if (timeLimitSeconds == -1)
+        {
+            throw new Exception("LỖI PARSE: Không tìm thấy dòng 'TIME: <số giây>' trong file level!");
+        }
+
         if (rowList.Count == 0)
         {
-            throw new Exception("LỖI PARSE: File text rỗng hoặc không có dòng dữ liệu hợp lệ!");
+            throw new Exception("LỖI PARSE: File text rỗng hoặc không có dòng dữ liệu board hợp lệ!");
         }
 
         rows = rowList.Count;
