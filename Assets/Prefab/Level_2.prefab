@@ -74,7 +74,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelTextFile: {fileID: 4900000, guid: 72088e8f81ae4f54d952b93eecbc00ca, type: 3}
-  cellSize: 1.2
+  timeLimitSeconds: 60
+  maxCellSize: 1.2
+  screenFillRatio: 0.85
   cellPrefab: {fileID: 2161465841645006862, guid: d6823fd435194cb4383dfac8fe52a637, type: 3}
 --- !u!1001 &10960889639265725
 PrefabInstance:

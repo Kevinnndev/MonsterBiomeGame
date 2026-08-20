@@ -17,7 +17,7 @@ public static class LevelTextParser
             if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
                 continue;
 
-            // Bỏ qua dòng TIME: nếu file cũ vẫn còn sót — không parse lỗi
+
             if (line.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase))
                 continue;
 
@@ -38,7 +38,7 @@ public static class LevelTextParser
             {
                 string token = rawValues[j];
 
-                // Bỏ qua dấu '*' sót lại từ file cũ
+            
                 if (token.EndsWith("*"))
                 {
                     token = token.TrimEnd('*');

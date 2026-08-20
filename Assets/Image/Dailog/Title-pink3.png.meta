@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4d1e7b300d18a464496b2128c697ec23
+guid: 49e2cecffe7e9f14683fb71e47650bc7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2037231356543095706
-    second: Shape-BG_0
+      213: 5088266134230705192
+    second: Title-pink3_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Shape-BG_0
+      name: Title-pink3_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 116
-        height: 115
+        x: 12
+        y: 21
+        width: 1056
+        height: 404
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 17, y: 18, z: 20, w: 17}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a93d9040023b54c10800000000000000
-      internalID: 2037231356543095706
+      spriteID: 824a87d17172d9640800000000000000
+      internalID: 5088266134230705192
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a921014482a978b46a563bd11edb45b6
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Shape-BG_0: 2037231356543095706
+      Title-pink3_0: 5088266134230705192
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

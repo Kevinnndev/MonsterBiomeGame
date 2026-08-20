@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: 4d1e7b300d18a464496b2128c697ec23
+guid: 244ff3f017e27774db73dcf067e15560
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2037231356543095706
-    second: Shape-BG_0
+      213: -8162561582422179356
+    second: Text_Howtoplay_0
+  - first:
+      213: 655305809137574114
+    second: Text_Howtoplay_1
+  - first:
+      213: 4761239902269716909
+    second: Text_Howtoplay_2
+  - first:
+      213: 1734619875915424140
+    second: Text_Howtoplay_3
+  - first:
+      213: -4777492593450832008
+    second: Text_Howtoplay_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +58,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,23 +125,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Shape-BG_0
+      name: Text_Howtoplay_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 116
-        height: 115
+        width: 142
+        height: 93
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 17, y: 18, z: 20, w: 17}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a93d9040023b54c10800000000000000
-      internalID: 2037231356543095706
+      spriteID: 4e1c976ec71c8be80800000000000000
+      internalID: -8162561582422179356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Howtoplay_1
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 24
+        width: 98
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e025e4592d181900800000000000000
+      internalID: 655305809137574114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Howtoplay_2
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 32
+        width: 139
+        height: 78
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da9b3390772531240800000000000000
+      internalID: 4761239902269716909
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Howtoplay_3
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 9
+        width: 182
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c816544369b921810800000000000000
+      internalID: 1734619875915424140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Howtoplay_4
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 3
+        width: 69
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87fad4a6ccfe2bdb0800000000000000
+      internalID: -4777492593450832008
       vertices: []
       indices: 
       edges: []
@@ -138,7 +238,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a921014482a978b46a563bd11edb45b6
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +248,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Shape-BG_0: 2037231356543095706
+      Text_Howtoplay_0: -8162561582422179356
+      Text_Howtoplay_1: 655305809137574114
+      Text_Howtoplay_2: 4761239902269716909
+      Text_Howtoplay_3: 1734619875915424140
+      Text_Howtoplay_4: -4777492593450832008
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

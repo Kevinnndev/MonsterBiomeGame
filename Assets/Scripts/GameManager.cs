@@ -63,6 +63,11 @@ public class GameManager : MonoBehaviour
     public GameObject howToPlayPanel;
     public GameObject boosterPanel;
 
+    [Header("Toggle Button Slash Overlays")]
+    public GameObject musicSlashOverlay;
+    public GameObject soundSlashOverlay;
+    public GameObject vibrateSlashOverlay;
+
     [Header("Lives & Score System")]
     public int lives = 3;
     [Tooltip("Không dùng nữa, chờ xoá khi UI mới hoàn thiện")]
@@ -178,13 +183,19 @@ public class GameManager : MonoBehaviour
         }
 
         if (mainMenuUI != null) mainMenuUI.SetActive(true);
+        EnsureToggleSlashOverlays();
+        UpdateToggleButtonsUI();
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (gameOverUI != null) gameOverUI.SetActive(false);
         if (winScreenUI != null) winScreenUI.SetActive(false);
         if (restartButton != null) restartButton.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
         if (topBarPanel != null) topBarPanel.SetActive(false);
-        if (howToPlayPanel != null) howToPlayPanel.SetActive(false);
+        if (howToPlayPanel != null) 
+        {
+            EnsureHowToPlayCloseButton();
+            howToPlayPanel.SetActive(false);
+        }
         if (boosterPanel != null)
         {
             boosterPanel.SetActive(false);
@@ -227,6 +238,8 @@ public class GameManager : MonoBehaviour
         PlaySFX(clickSound);
         if (settingsPanel != null) 
         {
+            EnsureToggleSlashOverlays();
+            UpdateToggleButtonsUI();
             settingsPanel.SetActive(true);
             ShowPanel(settingsPanel);
         }
@@ -245,6 +258,7 @@ public class GameManager : MonoBehaviour
         PlaySFX(clickSound);
         if (howToPlayPanel != null) 
         {
+            EnsureHowToPlayCloseButton();
             howToPlayPanel.SetActive(true);
             ShowPanel(howToPlayPanel);
         }
@@ -256,11 +270,64 @@ public class GameManager : MonoBehaviour
         if (howToPlayPanel != null) HidePanel(howToPlayPanel, false);
     }
 
+    private void EnsureHowToPlayCloseButton()
+    {
+        if (howToPlayPanel == null) return;
+
+        Transform closeTrans = howToPlayPanel.transform.Find("PopupBackground/CloseBtn");
+        if (closeTrans == null) closeTrans = howToPlayPanel.transform.Find("CloseBtn");
+        if (closeTrans == null) closeTrans = howToPlayPanel.transform.Find("PopupBackground/CloseHowToPlayBtn");
+        if (closeTrans == null) closeTrans = howToPlayPanel.transform.Find("CloseHowToPlayBtn");
+
+        Button btn = null;
+        if (closeTrans != null)
+        {
+            btn = closeTrans.GetComponent<Button>();
+        }
+        else
+        {
+            Transform parentTrans = howToPlayPanel.transform.Find("PopupBackground");
+            if (parentTrans == null) parentTrans = howToPlayPanel.transform;
+
+            GameObject closeObj = new GameObject("CloseBtn", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            closeObj.transform.SetParent(parentTrans, false);
+            closeObj.transform.SetAsLastSibling();
+            closeObj.layer = 5;
+
+            RectTransform rt = closeObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(-45f, -45f);
+            rt.sizeDelta = new Vector2(70f, 70f);
+
+            Image img = closeObj.GetComponent<Image>();
+            img.raycastTarget = true;
+            img.preserveAspect = true;
+            img.color = Color.white;
+
+#if UNITY_EDITOR
+            Sprite xSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/X (1).png");
+            if (xSp == null) xSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/x.png");
+            if (xSp != null) img.sprite = xSp;
+#endif
+
+            btn = closeObj.GetComponent<Button>();
+        }
+
+        if (btn != null)
+        {
+            btn.onClick.RemoveListener(CloseHowToPlay);
+            btn.onClick.AddListener(CloseHowToPlay);
+        }
+    }
+
     public void ToggleMusic()
     {
         PlaySFX(clickSound);
         isMusicMuted = !isMusicMuted;
         if (bgmSource != null) bgmSource.mute = isMusicMuted;
+        UpdateToggleButtonsUI();
     }
 
     public void ToggleSFX()
@@ -268,6 +335,7 @@ public class GameManager : MonoBehaviour
         isSFXMuted = !isSFXMuted;
         if (sfxSource != null) sfxSource.mute = isSFXMuted;
         if (!isSFXMuted) PlaySFX(clickSound);
+        UpdateToggleButtonsUI();
     }
 
     public void ToggleVibration()
@@ -275,6 +343,67 @@ public class GameManager : MonoBehaviour
         PlaySFX(clickSound);
         isVibrationOff = !isVibrationOff;
         if (!isVibrationOff) Handheld.Vibrate();
+        UpdateToggleButtonsUI();
+    }
+
+    public void UpdateToggleButtonsUI()
+    {
+        EnsureToggleSlashOverlays();
+
+        if (musicSlashOverlay != null) musicSlashOverlay.SetActive(isMusicMuted);
+        if (soundSlashOverlay != null) soundSlashOverlay.SetActive(isSFXMuted);
+        if (vibrateSlashOverlay != null) vibrateSlashOverlay.SetActive(isVibrationOff);
+    }
+
+    private void EnsureToggleSlashOverlays()
+    {
+        if (settingsPanel == null) return;
+
+        Transform group = settingsPanel.transform.Find("PopupBackground/ToggleButtonsGroup");
+        if (group == null) group = settingsPanel.transform.Find("ToggleButtonsGroup");
+        if (group == null) return;
+
+        string[] btnNames = { "MusicBtn", "SoundBtn", "VibrateBtn" };
+        for (int i = 0; i < btnNames.Length; i++)
+        {
+            Transform btnTrans = group.Find(btnNames[i]);
+            if (btnTrans == null) continue;
+
+            Transform slashTrans = btnTrans.Find("SlashOverlay");
+            GameObject slashObj;
+            if (slashTrans == null)
+            {
+                slashObj = new GameObject("SlashOverlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                slashObj.transform.SetParent(btnTrans, false);
+                slashObj.transform.SetAsLastSibling();
+                slashObj.layer = 5;
+
+                RectTransform rt = slashObj.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = new Vector2(10f, 75f);
+                rt.localEulerAngles = new Vector3(0f, 0f, -45f);
+
+                Image img = slashObj.GetComponent<Image>();
+                img.raycastTarget = false;
+                img.color = new Color(0.95f, 0.2f, 0.2f, 1f); // Màu đỏ gạch chéo nổi bật
+
+#if UNITY_EDITOR
+                Sprite sqSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/rounded square white.png");
+                if (sqSp != null) img.sprite = sqSp;
+#endif
+            }
+            else
+            {
+                slashObj = slashTrans.gameObject;
+            }
+
+            if (btnNames[i] == "MusicBtn" && musicSlashOverlay == null) musicSlashOverlay = slashObj;
+            else if (btnNames[i] == "SoundBtn" && soundSlashOverlay == null) soundSlashOverlay = slashObj;
+            else if (btnNames[i] == "VibrateBtn" && vibrateSlashOverlay == null) vibrateSlashOverlay = slashObj;
+        }
     }
 
     public void RestartFromSettings()

@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: 4d1e7b300d18a464496b2128c697ec23
+guid: 40fc62cae301c6646a817f427effb02f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2037231356543095706
-    second: Shape-BG_0
+      213: -8628026402652780095
+    second: Text_Paused_0
+  - first:
+      213: -5408386905603193995
+    second: Text_Paused_1
+  - first:
+      213: 1190020792719434491
+    second: Text_Paused_2
+  - first:
+      213: 5391627463508957647
+    second: Text_Paused_3
+  - first:
+      213: 2033123162656033421
+    second: Text_Paused_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,7 +58,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -113,23 +125,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Shape-BG_0
+      name: Text_Paused_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 116
-        height: 115
+        width: 88
+        height: 106
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 17, y: 18, z: 20, w: 17}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a93d9040023b54c10800000000000000
-      internalID: 2037231356543095706
+      spriteID: 1c9803533b7134880800000000000000
+      internalID: -8628026402652780095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Paused_1
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 11
+        width: 100
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 573c5a3a3cc81f4b0800000000000000
+      internalID: -5408386905603193995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Paused_2
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 22
+        width: 169
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf2ee512b9dc38010800000000000000
+      internalID: 1190020792719434491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Paused_3
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 15
+        width: 91
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc911bbac98e2da40800000000000000
+      internalID: 5391627463508957647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Text_Paused_4
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 6
+        width: 96
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8a4bb69eba173c10800000000000000
+      internalID: 2033123162656033421
       vertices: []
       indices: 
       edges: []
@@ -138,7 +238,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: a921014482a978b46a563bd11edb45b6
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +248,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Shape-BG_0: 2037231356543095706
+      Text_Paused_0: -8628026402652780095
+      Text_Paused_1: -5408386905603193995
+      Text_Paused_2: 1190020792719434491
+      Text_Paused_3: 5391627463508957647
+      Text_Paused_4: 2033123162656033421
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

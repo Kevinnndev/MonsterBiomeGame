@@ -3,18 +3,13 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-/// <summary>
-/// Editor Tool: Kiểm tra hàng loạt tất cả level có giải được không (pre-flight checker).
-/// KHÔNG ghi gì vào file — chỉ báo cáo kết quả trong Console.
-///
-/// Menu: Tools ▸ Monster Biome ▸ Check Level Solvability
-/// </summary>
+
 public static class LevelSolverEditorTool
 {
     [MenuItem("Tools/Monster Biome/Check Level Solvability")]
     public static void CheckAllLevels()
     {
-        // Tìm tất cả file .txt trong thư mục Levels Data
+    
         string levelsFolder = Path.Combine(Application.dataPath, "Levels Data");
 
         if (!Directory.Exists(levelsFolder))
@@ -46,7 +41,7 @@ public static class LevelSolverEditorTool
             int rows, cols;
             int[,] grid;
 
-            // Parse file
+
             try
             {
                 grid = LevelTextParser.Parse(content, out rows, out cols);
@@ -58,7 +53,6 @@ public static class LevelSolverEditorTool
                 continue;
             }
 
-            // Chạy DFS solver (tìm tối đa 2 nghiệm)
             var solutions = LevelSolver.Solve(grid, rows, cols, maxSolutionsToFind: 2);
 
             if (solutions.Count == 0)
@@ -68,13 +62,10 @@ public static class LevelSolverEditorTool
             }
             else if (solutions.Count >= 2)
             {
-                // In ra cả 2 nghiệm tìm được để dễ debug
                 string sol1 = FormatSolution(solutions[0]);
                 string sol2 = FormatSolution(solutions[1]);
-                Debug.LogError($"[LevelSolverEditorTool] ⚠️ NHIỀU NGHIỆM: {fileName} ({rows}x{cols}) — " +
-                               $"Puzzle không rõ ràng!\n" +
-                               $"  Nghiệm 1: {sol1}\n" +
-                               $"  Nghiệm 2: {sol2}");
+                Debug.LogError($"[LevelSolverEditorTool] ⚠️ NHIỀU NGHIỆM: {fileName} ({rows}x{cols}) — Puzzle không rõ ràng!\n" +
+                               $"  [Nghiệm 1]: {sol1}  |  [Nghiệm 2]: {sol2}");
                 countMultipleSolutions++;
             }
             else
@@ -85,7 +76,7 @@ public static class LevelSolverEditorTool
             }
         }
 
-        // Tổng kết
+  
         Debug.Log($"[LevelSolverEditorTool] ═══ KẾT QUẢ TỔNG HỢP ═══\n" +
                   $"  ✅ OK (1 nghiệm duy nhất): {countOK}\n" +
                   $"  ⚠️ Nhiều nghiệm:           {countMultipleSolutions}\n" +
@@ -103,9 +94,7 @@ public static class LevelSolverEditorTool
         }
     }
 
-    /// <summary>
-    /// Format nghiệm thành chuỗi dễ đọc, ví dụ: "(0,1) (1,3) (2,0) (3,2)"
-    /// </summary>
+
     private static string FormatSolution(System.Collections.Generic.List<(int row, int col)> solution)
     {
         var sb = new System.Text.StringBuilder();
