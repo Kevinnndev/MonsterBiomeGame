@@ -14,11 +14,7 @@ public static class LevelTextParser
         {
             string line = rawLines[i].Trim();
 
-            if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
-                continue;
-
-
-            if (line.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(line) || line.StartsWith("#") || line.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             string[] rawValues = line.Split(new char[] { ' ', '\t', ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -29,7 +25,7 @@ public static class LevelTextParser
             }
             else if (rawValues.Length != expectedColCount)
             {
-                throw new Exception($"LỖI PARSE: Hàng thứ {i + 1} có {rawValues.Length} cột, nhưng các hàng trước đã có {expectedColCount} cột. Vui lòng sửa lại file text!");
+                throw new Exception($"Lỗi Parse: Hàng thứ {i + 1} có {rawValues.Length} cột, khác với số cột {expectedColCount} trước đó.");
             }
 
             int[] columns = new int[rawValues.Length];
@@ -38,24 +34,14 @@ public static class LevelTextParser
             {
                 string token = rawValues[j];
 
-            
-                if (token.EndsWith("*"))
-                {
-                    token = token.TrimEnd('*');
-                }
+                if (token.EndsWith("*")) token = token.TrimEnd('*');
 
                 if (int.TryParse(token, out int biomeId))
                 {
-                    if (biomeId < 0)
-                    {
-                        Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: biomeId '{biomeId}' là số âm, tự chuyển thành ô 0.");
-                    }
-                    
                     columns[j] = Mathf.Max(0, biomeId);
                 }
                 else
                 {
-                    Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: Ký tự '{rawValues[j]}' không hợp lệ, tự chuyển thành ô 0.");
                     columns[j] = 0;
                 }
             }
@@ -65,7 +51,7 @@ public static class LevelTextParser
 
         if (rowList.Count == 0)
         {
-            throw new Exception("LỖI PARSE: File text rỗng hoặc không có dòng dữ liệu board hợp lệ!");
+            throw new Exception("File text rỗng hoặc không có dữ liệu hợp lệ.");
         }
 
         rows = rowList.Count;

@@ -3,18 +3,16 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-
 public static class LevelSolverEditorTool
 {
     [MenuItem("Tools/Monster Biome/Check Level Solvability")]
     public static void CheckAllLevels()
     {
-    
         string levelsFolder = Path.Combine(Application.dataPath, "Levels Data");
 
         if (!Directory.Exists(levelsFolder))
         {
-            Debug.LogError($"[LevelSolverEditorTool] Không tìm thấy thư mục '{levelsFolder}'!");
+            Debug.LogError($"[LevelSolverEditorTool] Thư mục '{levelsFolder}' không tồn tại!");
             return;
         }
 
@@ -22,11 +20,11 @@ public static class LevelSolverEditorTool
 
         if (txtFiles.Length == 0)
         {
-            Debug.LogWarning("[LevelSolverEditorTool] Không tìm thấy file .txt nào trong thư mục Levels Data!");
+            Debug.LogWarning("[LevelSolverEditorTool] Không tìm thấy file .txt nào!");
             return;
         }
 
-        Debug.Log($"[LevelSolverEditorTool] ═══ BẮT ĐẦU KIỂM TRA {txtFiles.Length} FILE LEVEL ═══");
+        Debug.Log($"[LevelSolverEditorTool] Kiểm tra {txtFiles.Length} file level...");
 
         int countOK = 0;
         int countNoSolution = 0;
@@ -41,14 +39,13 @@ public static class LevelSolverEditorTool
             int rows, cols;
             int[,] grid;
 
-
             try
             {
                 grid = LevelTextParser.Parse(content, out rows, out cols);
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[LevelSolverEditorTool] ❌ PARSE LỖI: {fileName} — {ex.Message}");
+                Debug.LogError($"[LevelSolverEditorTool] LỖI PARSE: {fileName} — {ex.Message}");
                 countParseError++;
                 continue;
             }
@@ -57,43 +54,36 @@ public static class LevelSolverEditorTool
 
             if (solutions.Count == 0)
             {
-                Debug.LogError($"[LevelSolverEditorTool] ❌ VÔ NGHIỆM: {fileName} ({rows}x{cols}) — Level này KHÔNG THỂ chơi được!");
+                Debug.LogError($"[LevelSolverEditorTool] VÔ NGHIỆM: {fileName} ({rows}x{cols})");
                 countNoSolution++;
             }
             else if (solutions.Count >= 2)
             {
                 string sol1 = FormatSolution(solutions[0]);
                 string sol2 = FormatSolution(solutions[1]);
-                Debug.LogError($"[LevelSolverEditorTool] ⚠️ NHIỀU NGHIỆM: {fileName} ({rows}x{cols}) — Puzzle không rõ ràng!\n" +
+                Debug.LogError($"[LevelSolverEditorTool] TRÙNG NGHIỆM: {fileName} ({rows}x{cols})\n" +
                                $"  [Nghiệm 1]: {sol1}  |  [Nghiệm 2]: {sol2}");
                 countMultipleSolutions++;
             }
             else
             {
                 string sol = FormatSolution(solutions[0]);
-                Debug.Log($"[LevelSolverEditorTool] ✅ OK: {fileName} ({rows}x{cols}) — Duy nhất 1 nghiệm: {sol}");
+                Debug.Log($"[LevelSolverEditorTool] OK: {fileName} ({rows}x{cols}) — {sol}");
                 countOK++;
             }
         }
 
-  
-        Debug.Log($"[LevelSolverEditorTool] ═══ KẾT QUẢ TỔNG HỢP ═══\n" +
-                  $"  ✅ OK (1 nghiệm duy nhất): {countOK}\n" +
-                  $"  ⚠️ Nhiều nghiệm:           {countMultipleSolutions}\n" +
-                  $"  ❌ Vô nghiệm:              {countNoSolution}\n" +
-                  $"  ❌ Lỗi parse:              {countParseError}\n" +
-                  $"  Tổng số file:              {txtFiles.Length}");
+        Debug.Log($"[LevelSolverEditorTool] KẾT QUẢ: OK={countOK}, Trùng nghiệm={countMultipleSolutions}, Vô nghiệm={countNoSolution}, Lỗi parse={countParseError}");
 
         if (countNoSolution > 0 || countMultipleSolutions > 0 || countParseError > 0)
         {
-            Debug.LogError("[LevelSolverEditorTool] ⛔ CÓ LEVEL CẦN SỬA! Xem chi tiết từng file ở trên.");
+            Debug.LogError("[LevelSolverEditorTool] Có level cần kiểm tra lại.");
         }
         else
         {
-            Debug.Log("[LevelSolverEditorTool] 🎉 Tất cả level đều OK — sẵn sàng phát hành!");
+            Debug.Log("[LevelSolverEditorTool] Tất cả level đều hợp lệ.");
         }
     }
-
 
     private static string FormatSolution(System.Collections.Generic.List<(int row, int col)> solution)
     {
