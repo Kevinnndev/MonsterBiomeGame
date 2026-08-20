@@ -78,8 +78,7 @@ public class GameManager : MonoBehaviour
     [Header("Timer System")]
     private float currentTime;
     private bool isTimerRunning = false;
-    private int timeLimitSeconds = 0;
-    
+
     [Header("Timer Display (mới)")]
     public TMPro.TextMeshProUGUI timerText;
 
@@ -124,98 +123,75 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
 
- 
         if (freezeTimeRemaining > 0f)
         {
             freezeTimeRemaining -= Time.deltaTime;
-
-            if (timerText != null)
-            {
-                int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
-                int minutes = secondsLeft / 60;
-                int seconds = secondsLeft % 60;
-                timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-                timerText.color = Color.cyan; 
-            }
-            return; 
+            UpdateTimerDisplay(currentTime, Color.cyan);
+            return;
         }
 
         if (!isTimerRunning) return;
-        
+
         currentTime -= Time.deltaTime;
 
-        if (timerText != null)
-        {
-            int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
-            int minutes = secondsLeft / 60;
-            int seconds = secondsLeft % 60;
-            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-            
-            if (secondsLeft <= 5)
-                timerText.color = Color.red;
-            else
-                timerText.color = defaultTimerColor;
-        }
+        int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
+        Color timerColor = (secondsLeft <= 5) ? Color.red : defaultTimerColor;
+        UpdateTimerDisplay(currentTime, timerColor);
 
         if (currentTime <= 0f)
         {
             currentTime = 0f;
             isTimerRunning = false;
             Debug.Log("[Timer] Hết giờ! Game Over.");
-            GameOver(); 
+            GameOver();
         }
+    }
+
+    private void UpdateTimerDisplay(float timeInSeconds, Color textColor)
+    {
+        int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, timeInSeconds));
+        int minutes = secondsLeft / 60;
+        int seconds = secondsLeft % 60;
+        timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        timerText.color = textColor;
     }
 
     void Start()
     {
-        if (timerText != null)
-        {
-            defaultTimerColor = timerText.color;
-        }
+        defaultTimerColor = timerText.color;
 
-
-
-        if (mainMenuUI != null) mainMenuUI.SetActive(true);
+        mainMenuUI.SetActive(true);
         EnsureToggleSlashOverlays();
         UpdateToggleButtonsUI();
-        if (settingsPanel != null) settingsPanel.SetActive(false);
-        if (gameOverUI != null) gameOverUI.SetActive(false);
-        if (winScreenUI != null) winScreenUI.SetActive(false);
-        if (restartButton != null) restartButton.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.SetActive(false);
-        if (topBarPanel != null) topBarPanel.SetActive(false);
-        if (howToPlayPanel != null) 
-        {
-            EnsureHowToPlayCloseButton();
-            howToPlayPanel.SetActive(false);
-        }
-        if (boosterPanel != null)
-        {
-            boosterPanel.SetActive(false);
+        settingsPanel.SetActive(false);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        topBarPanel.SetActive(false);
+        EnsureHowToPlayCloseButton();
+        howToPlayPanel.SetActive(false);
+        boosterPanel.SetActive(false);
 
-            foreach (var graphic in boosterPanel.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+        foreach (var graphic in boosterPanel.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+        {
+            if (graphic.GetComponent<Button>() == null)
             {
-                if (graphic.GetComponent<Button>() == null)
-                {
-                    graphic.raycastTarget = false;
-                }
+                graphic.raycastTarget = false;
             }
         }
     }
 
     public void PlaySFX(AudioClip clip)
     {
-        if (clip != null && sfxSource != null)
-        {
-            sfxSource.PlayOneShot(clip);
-        }
+        sfxSource.PlayOneShot(clip);
     }
 
     public void StartGame()
     {
         PlaySFX(clickSound);
-        if (mainMenuUI != null) mainMenuUI.SetActive(false);
-        if (topBarPanel != null) topBarPanel.SetActive(true);
+        mainMenuUI.SetActive(false);
+        topBarPanel.SetActive(true);
 
         currentLevel = 0;
         lives = 3;
@@ -227,44 +203,33 @@ public class GameManager : MonoBehaviour
     public void OpenSettings()
     {
         PlaySFX(clickSound);
-        if (settingsPanel != null) 
-        {
-            EnsureToggleSlashOverlays();
-            UpdateToggleButtonsUI();
-            settingsPanel.SetActive(true);
-            ShowPanel(settingsPanel);
-        }
+        UpdateToggleButtonsUI();
+        settingsPanel.SetActive(true);
+        ShowPanel(settingsPanel);
         Time.timeScale = 0f;
     }
 
     public void CloseSettings()
     {
         PlaySFX(clickSound);
-        if (settingsPanel != null) HidePanel(settingsPanel, true);
-        else Time.timeScale = 1f;
+        HidePanel(settingsPanel, true);
     }
 
     public void OpenHowToPlay()
     {
         PlaySFX(clickSound);
-        if (howToPlayPanel != null) 
-        {
-            EnsureHowToPlayCloseButton();
-            howToPlayPanel.SetActive(true);
-            ShowPanel(howToPlayPanel);
-        }
+        howToPlayPanel.SetActive(true);
+        ShowPanel(howToPlayPanel);
     }
 
     public void CloseHowToPlay()
     {
         PlaySFX(clickSound);
-        if (howToPlayPanel != null) HidePanel(howToPlayPanel, false);
+        HidePanel(howToPlayPanel, false);
     }
 
     private void EnsureHowToPlayCloseButton()
     {
-        if (howToPlayPanel == null) return;
-
         Transform closeTrans = howToPlayPanel.transform.Find("PopupBackground/CloseBtn");
         if (closeTrans == null) closeTrans = howToPlayPanel.transform.Find("CloseBtn");
         if (closeTrans == null) closeTrans = howToPlayPanel.transform.Find("PopupBackground/CloseHowToPlayBtn");
@@ -312,14 +277,14 @@ public class GameManager : MonoBehaviour
     {
         PlaySFX(clickSound);
         isMusicMuted = !isMusicMuted;
-        if (bgmSource != null) bgmSource.mute = isMusicMuted;
+        bgmSource.mute = isMusicMuted;
         UpdateToggleButtonsUI();
     }
 
     public void ToggleSFX()
     {
         isSFXMuted = !isSFXMuted;
-        if (sfxSource != null) sfxSource.mute = isSFXMuted;
+        sfxSource.mute = isSFXMuted;
         if (!isSFXMuted) PlaySFX(clickSound);
         UpdateToggleButtonsUI();
     }
@@ -336,15 +301,13 @@ public class GameManager : MonoBehaviour
     {
         EnsureToggleSlashOverlays();
 
-        if (musicSlashOverlay != null) musicSlashOverlay.SetActive(isMusicMuted);
-        if (soundSlashOverlay != null) soundSlashOverlay.SetActive(isSFXMuted);
-        if (vibrateSlashOverlay != null) vibrateSlashOverlay.SetActive(isVibrationOff);
+        musicSlashOverlay.SetActive(isMusicMuted);
+        soundSlashOverlay.SetActive(isSFXMuted);
+        vibrateSlashOverlay.SetActive(isVibrationOff);
     }
 
     private void EnsureToggleSlashOverlays()
     {
-        if (settingsPanel == null) return;
-
         Transform group = settingsPanel.transform.Find("PopupBackground/ToggleButtonsGroup");
         if (group == null) group = settingsPanel.transform.Find("ToggleButtonsGroup");
         if (group == null) return;
@@ -375,9 +338,15 @@ public class GameManager : MonoBehaviour
                 Image img = slashObj.GetComponent<Image>();
                 img.raycastTarget = false;
                 img.color = new Color(0.95f, 0.2f, 0.2f, 1f);
-
-
             }
+            else
+            {
+                slashObj = slashTrans.gameObject;
+            }
+
+            if (i == 0 && musicSlashOverlay == null) musicSlashOverlay = slashObj;
+            else if (i == 1 && soundSlashOverlay == null) soundSlashOverlay = slashObj;
+            else if (i == 2 && vibrateSlashOverlay == null) vibrateSlashOverlay = slashObj;
         }
     }
     public void RestartFromSettings()
@@ -386,28 +355,33 @@ public class GameManager : MonoBehaviour
         RestartGame();
     }
 
-    public void ExitToMainMenu()
+    private void ClearCurrentBoard()
     {
-        PlaySFX(clickSound);
-        Time.timeScale = 1f;
-
-        CloseSettings();
-        if (gameOverUI != null) gameOverUI.SetActive(false);
-        if (winScreenUI != null) winScreenUI.SetActive(false);
-        if (topBarPanel != null) topBarPanel.SetActive(false);
-        if (howToPlayPanel != null) howToPlayPanel.SetActive(false);
-        if (boosterPanel != null) boosterPanel.SetActive(false);
-        if (restartButton != null) restartButton.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.SetActive(false);
-
         if (currentBoardInstance != null)
         {
             Destroy(currentBoardInstance);
             currentBoardInstance = null;
             currentBoardView = null;
         }
+    }
 
-        if (mainMenuUI != null) mainMenuUI.SetActive(true);
+    public void ExitToMainMenu()
+    {
+        PlaySFX(clickSound);
+        Time.timeScale = 1f;
+
+        CloseSettings();
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        topBarPanel.SetActive(false);
+        howToPlayPanel.SetActive(false);
+        boosterPanel.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+
+        ClearCurrentBoard();
+
+        mainMenuUI.SetActive(true);
     }
 
     public void LoadLevel(int levelIndex)
@@ -419,30 +393,24 @@ public class GameManager : MonoBehaviour
         }
 
         currentLevel = levelIndex;
-        if (levelTitleText != null) levelTitleText.text = "MÀN " + (currentLevel + 1);
+        levelTitleText.text = "MÀN " + (currentLevel + 1);
 
         lives = 3;
         placedMonstersCount = 0;
         isGameOver = false;
 
-        if (gameOverUI != null) gameOverUI.SetActive(false);
-        if (winScreenUI != null) winScreenUI.SetActive(false);
-        if (restartButton != null) restartButton.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.SetActive(false);
-        if (boosterPanel != null) boosterPanel.SetActive(true);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        boosterPanel.SetActive(true);
 
+        livesCountText.text = "x" + lives;
 
-
-        if (livesCountText != null) livesCountText.text = "x" + lives;
-
-        if (currentBoardInstance != null)
-        {
-            Destroy(currentBoardInstance);
-        }
+        ClearCurrentBoard();
 
         currentBoardInstance = Instantiate(levelPrefabs[currentLevel], boardContainer);
 
-      
         currentBoardInstance.transform.localPosition = Vector3.zero;
         currentBoardInstance.transform.localScale = Vector3.one;
 
@@ -472,7 +440,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-
         var solutions = LevelSolver.Solve(parsedGrid, currentRows, currentCols, maxSolutionsToFind: 2);
 
         if (solutions.Count == 0)
@@ -480,12 +447,7 @@ public class GameManager : MonoBehaviour
             Debug.LogError($"[GameManager] Level {currentLevel} VÔ NGHIỆM — không thể chơi được! " +
                             "Cần sửa lại file text level này.");
   
-            if (currentBoardInstance != null)
-            {
-                Destroy(currentBoardInstance);
-                currentBoardInstance = null;
-                currentBoardView = null;
-            }
+            ClearCurrentBoard();
             ExitToMainMenu();
             return;
         }
@@ -504,9 +466,7 @@ public class GameManager : MonoBehaviour
         bool isBoardValid = currentBoardView.InitializeBoard(this, parsedGrid, currentRows, currentCols);
         if (!isBoardValid) return;
 
-
-        timeLimitSeconds = currentBoardView.timeLimitSeconds;
-        currentTime = timeLimitSeconds;
+        currentTime = currentBoardView.timeLimitSeconds;
         isTimerRunning = true;
 
         gridData = parsedGrid;
@@ -586,7 +546,7 @@ public class GameManager : MonoBehaviour
         {
             lives--;
 
-            if (livesCountText != null) livesCountText.text = "x" + lives;
+            livesCountText.text = "x" + lives;
 
             PlaySFX(errorSound);
             if (!isVibrationOff) Handheld.Vibrate();
@@ -639,12 +599,9 @@ public class GameManager : MonoBehaviour
         }
 
        
-        if (darkOverlay != null)
-        {
-            darkOverlay.gameObject.SetActive(true);
-            darkOverlay.alpha = 0f;
-            gameOverSeq.Insert(0, darkOverlay.DOFade(0.5f, 0.6f).SetEase(Ease.OutQuad).SetUpdate(true));
-        }
+        darkOverlay.gameObject.SetActive(true);
+        darkOverlay.alpha = 0f;
+        gameOverSeq.Insert(0, darkOverlay.DOFade(0.5f, 0.6f).SetEase(Ease.OutQuad).SetUpdate(true));
 
         
         gameOverSeq.Insert(0, DOTween.To(() => Time.timeScale, x => Time.timeScale = x, 0.3f, 0.4f).SetUpdate(true));
@@ -670,27 +627,15 @@ public class GameManager : MonoBehaviour
 
     void ShowGameOverPanel()
     {
-        if (gameOverUI != null) 
-        {
-            gameOverUI.SetActive(true);
-            
-            if (gameOverCanvasGroup != null)
-            {
-             
-                gameOverCanvasGroup.alpha = 0f;
-                gameOverUI.transform.localScale = Vector3.one * 1.1f;
-
-                gameOverCanvasGroup.DOFade(1f, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true);
-                gameOverUI.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true);
-            }
-            else
-            {
-                
-                ShowPopupScale(gameOverUI);
-            }
-        }
+        gameOverUI.SetActive(true);
         
-        if (restartButton != null) restartButton.SetActive(true);
+        gameOverCanvasGroup.alpha = 0f;
+        gameOverUI.transform.localScale = Vector3.one * 1.1f;
+
+        gameOverCanvasGroup.DOFade(1f, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true);
+        gameOverUI.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true);
+
+        restartButton.SetActive(true);
     }
 
     void GameWin()
@@ -699,13 +644,10 @@ public class GameManager : MonoBehaviour
         isTimerRunning = false;
         int bonusScore = 500 + (lives * 100);
         AddScore(bonusScore);
-        if (winScreenUI != null) 
-        {
-            winScreenUI.SetActive(true);
-            ShowPopupScale(winScreenUI);
-        }
-        if (restartButton != null) restartButton.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.SetActive(true);
+        winScreenUI.SetActive(true);
+        ShowPopupScale(winScreenUI);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(true);
         PlaySFX(winSound);
     }
 
@@ -722,13 +664,13 @@ public class GameManager : MonoBehaviour
         currentScore = 0;
         UpdateScoreUI();
 
-        if (gameOverUI != null) gameOverUI.SetActive(false);
-        if (winScreenUI != null) winScreenUI.SetActive(false);
-        if (restartButton != null) restartButton.SetActive(false);
-        if (nextLevelButton != null) nextLevelButton.SetActive(false);
-        if (mainMenuUI != null) mainMenuUI.SetActive(false);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        mainMenuUI.SetActive(false);
 
-        if (topBarPanel != null) topBarPanel.SetActive(true);
+        topBarPanel.SetActive(true);
 
         LoadLevel(currentLevel);
     }
@@ -742,15 +684,12 @@ public class GameManager : MonoBehaviour
 
     void UpdateScoreUI()
     {
-        if (scoreText != null)
-        {
-            scoreText.transform.DOKill(true);
-            DOTween.To(() => displayedScore, x => { 
-                displayedScore = x; 
-                scoreText.text = "ĐIỂM: " + x.ToString(); 
-            }, currentScore, 0.4f).SetEase(Ease.OutQuad);
-            scoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0), 0.3f, 2, 0.5f);
-        }
+        scoreText.transform.DOKill(true);
+        DOTween.To(() => displayedScore, x => { 
+            displayedScore = x; 
+            scoreText.text = "ĐIỂM: " + x.ToString(); 
+        }, currentScore, 0.4f).SetEase(Ease.OutQuad);
+        scoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0), 0.3f, 2, 0.5f);
     }
 
     bool IsValidPlacement(int targetRow, int targetCol, int targetBiomeID)
@@ -894,10 +833,10 @@ public class GameManager : MonoBehaviour
 
     private void UpdateBoosterUI()
     {
-        if (findOneBtn != null) findOneBtn.interactable = (findOneCount > 0);
-        if (freezeTimeBtn != null) freezeTimeBtn.interactable = (freezeTimeCount > 0);
-        if (rocketBtn != null) rocketBtn.interactable = (rocketCount > 0);
-        if (bowBtn != null) bowBtn.interactable = (bowCount > 0);
+        findOneBtn.interactable = (findOneCount > 0);
+        freezeTimeBtn.interactable = (freezeTimeCount > 0);
+        rocketBtn.interactable = (rocketCount > 0);
+        bowBtn.interactable = (bowCount > 0);
     }
 
     private void ShowPopupScale(GameObject panel)
