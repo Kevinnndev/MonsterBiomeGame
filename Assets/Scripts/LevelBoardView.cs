@@ -38,12 +38,11 @@ public class LevelBoardView : MonoBehaviour
 
        
         Camera cam = Camera.main;
-        if (cam != null && cam.orthographic)
+        if (cam.orthographic)
         {
-            float camHeight = cam.orthographicSize * 2f;              
-            float camWidth  = camHeight * cam.aspect;                  
+            float camHeight = cam.orthographicSize * 2f;
+            float camWidth  = camHeight * cam.aspect;
 
- 
             float fitByHeight = (camHeight * screenFillRatio) / requiredRows;
             float fitByWidth  = (camWidth  * screenFillRatio) / requiredCols;
 
@@ -51,7 +50,7 @@ public class LevelBoardView : MonoBehaviour
         }
         else
         {
-            cellSize = maxCellSize; 
+            cellSize = maxCellSize;
         }
 
         Debug.Log($"[LevelBoardView] Grid {requiredRows}x{requiredCols} → cellSize = {cellSize:F3}");

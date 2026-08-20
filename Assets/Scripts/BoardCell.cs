@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using DG.Tweening;
@@ -10,21 +9,17 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
     public SpriteRenderer monsterSprite;
 
     [Header("Mark Visual (Sprite)")]
-    [SerializeField] private SpriteRenderer markIcon; 
+    [SerializeField] private SpriteRenderer markIcon;
 
     private int row, col;
     private GameManager gameManager;
     private Vector3 originalScale;
-    private Vector3 markIconOriginalScale; 
+    private Vector3 markIconOriginalScale;
 
     private void Awake()
     {
-       
-        if (markIcon != null)
-        {
-            markIconOriginalScale = markIcon.transform.localScale;
-            markIcon.enabled = false;
-        }
+        markIconOriginalScale = markIcon.transform.localScale;
+        markIcon.enabled = false;
     }
 
     public void InitCell(int r, int c, GameManager gm)
@@ -37,29 +32,22 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (gameManager != null) gameManager.HandleCellClick(row, col);
+        gameManager.HandleCellClick(row, col);
     }
 
     private void OnMouseEnter()
     {
-        if (gameManager != null && !gameManager.IsGameOver())
+        if (!gameManager.IsGameOver())
         {
-            
             transform.DOKill();
-            
             transform.DOScale(originalScale * 1.05f, 0.15f).SetEase(Ease.OutQuad);
         }
     }
 
-    
     private void OnMouseExit()
     {
-        if (gameManager != null)
-        {
-            transform.DOKill();
-            
-            transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad);
-        }
+        transform.DOKill();
+        transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad);
     }
 
     public void SetupCell(int biomeID, Color biomeColor)
@@ -78,38 +66,28 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
             GetComponent<BoxCollider2D>().enabled = true;
         }
         monsterSprite.enabled = false;
-        if (markIcon != null) markIcon.enabled = false;
+        markIcon.enabled = false;
     }
 
     public void SetMarkState(bool isMarked, Color biomeColor)
     {
-        
-        if (markIcon == null) return;
-
-        
         markIcon.transform.DOKill();
 
         if (isMarked)
         {
             markIcon.enabled = true;
             markIcon.transform.localScale = Vector3.zero;
-            
             markIcon.transform.DOScale(markIconOriginalScale, 0.3f).SetEase(Ease.OutBack);
         }
         else
         {
-          
             markIcon.enabled = false;
         }
 
-    
         cellSprite.DOKill();
-   
         transform.DOKill(complete: true);
 
-  
         Color targetColor = isMarked ? new Color(biomeColor.r, biomeColor.g, biomeColor.b, 0.4f) : new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
-        
         cellSprite.DOColor(targetColor, 0.15f).SetEase(Ease.OutQuad);
         transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 2, 0.5f);
     }
@@ -120,22 +98,19 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         {
             monsterSprite.enabled = true;
             monsterSprite.sprite = sprite;
-            if (markIcon != null) markIcon.enabled = false;
+            markIcon.enabled = false;
 
             ScaleSpriteToFit();
 
             Vector3 targetScale = monsterSprite.transform.localScale;
-
             monsterSprite.transform.localScale = Vector3.zero;
             monsterSprite.transform.DOKill();
-           
             monsterSprite.transform.DOScale(targetScale, 0.35f).SetEase(Ease.OutBack);
         }
         else
         {
             if (monsterSprite.enabled)
             {
-                
                 monsterSprite.transform.DOKill();
                 monsterSprite.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.InBack).OnComplete(() => {
                     monsterSprite.enabled = false;
@@ -146,11 +121,10 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
     public void ShowErrorSprite(Sprite errorSprite)
     {
-        transform.DOKill(); 
-        
+        transform.DOKill();
         transform.DOShakePosition(0.4f, strength: new Vector3(0.1f, 0, 0), vibrato: 20, randomness: 90, snapping: false, fadeOut: true)
             .OnComplete(() => {
-                if (markIcon != null) markIcon.enabled = false; 
+                markIcon.enabled = false;
 
                 monsterSprite.enabled = true;
                 monsterSprite.sprite = errorSprite;

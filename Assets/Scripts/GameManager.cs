@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -176,11 +175,7 @@ public class GameManager : MonoBehaviour
             defaultTimerColor = timerText.color;
         }
 
-        if (Camera.main != null && Camera.main.GetComponent<UnityEngine.EventSystems.Physics2DRaycaster>() == null)
-        {
-            Camera.main.gameObject.AddComponent<UnityEngine.EventSystems.Physics2DRaycaster>();
-            Debug.Log("[GameManager] Đã tự động thêm Physics2DRaycaster vào Main Camera.");
-        }
+
 
         if (mainMenuUI != null) mainMenuUI.SetActive(true);
         EnsureToggleSlashOverlays();
@@ -304,11 +299,6 @@ public class GameManager : MonoBehaviour
             img.preserveAspect = true;
             img.color = Color.white;
 
-#if UNITY_EDITOR
-            Sprite xSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/X (1).png");
-            if (xSp == null) xSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/x.png");
-            if (xSp != null) img.sprite = xSp;
-#endif
 
             btn = closeObj.GetComponent<Button>();
         }
@@ -386,24 +376,12 @@ public class GameManager : MonoBehaviour
 
                 Image img = slashObj.GetComponent<Image>();
                 img.raycastTarget = false;
-                img.color = new Color(0.95f, 0.2f, 0.2f, 1f); 
+                img.color = new Color(0.95f, 0.2f, 0.2f, 1f);
 
-#if UNITY_EDITOR
-                Sprite sqSp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/rounded square white.png");
-                if (sqSp != null) img.sprite = sqSp;
-#endif
-            }
-            else
-            {
-                slashObj = slashTrans.gameObject;
-            }
 
-            if (btnNames[i] == "MusicBtn" && musicSlashOverlay == null) musicSlashOverlay = slashObj;
-            else if (btnNames[i] == "SoundBtn" && soundSlashOverlay == null) soundSlashOverlay = slashObj;
-            else if (btnNames[i] == "VibrateBtn" && vibrateSlashOverlay == null) vibrateSlashOverlay = slashObj;
+            }
         }
     }
-
     public void RestartFromSettings()
     {
         CloseSettings();
@@ -538,16 +516,6 @@ public class GameManager : MonoBehaviour
         cellMarks = new int[currentRows, currentCols];
         errorCells = new int[currentRows, currentCols];
 
-        for (int r = 0; r < currentRows; r++)
-        {
-            for (int c = 0; c < currentCols; c++)
-            {
-                placedMonsters[r, c] = 0;
-                cellMarks[r, c] = 0;
-                errorCells[r, c] = 0;
-            }
-        }
-
   
         activeBooster = BoosterType.None;
         freezeTimeRemaining = 0f;
@@ -595,7 +563,6 @@ public class GameManager : MonoBehaviour
     void ToggleMark(int row, int col, int biomeID)
     {
         BoardCell targetCell = currentBoardView.GetCell(row, col, currentCols);
-        if (targetCell == null) return;
 
         if (cellMarks[row, col] == 0)
         {
@@ -612,7 +579,6 @@ public class GameManager : MonoBehaviour
     void TryPlaceMonster(int row, int col, int biomeID)
     {
         BoardCell targetCell = currentBoardView.GetCell(row, col, currentCols);
-        if (targetCell == null) return;
 
         if (IsValidPlacement(row, col, biomeID))
         {
@@ -634,20 +600,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Hàm lõi đặt quái vật — dùng chung cho cả đặt tay (TryPlaceMonster) và booster (TryAutoPlaceInScope).
-    /// Gọi hàm này KHI ĐÃ XÁC NHẬN ô hợp lệ (solutionCells[row,col] == true, chưa đặt).
-    /// </summary>
     private void PlaceMonsterAt(int row, int col, int biomeID)
     {
         placedMonsters[row, col] = 1;
         cellMarks[row, col] = 0;
 
         BoardCell targetCell = currentBoardView.GetCell(row, col, currentCols);
-        if (targetCell != null)
-        {
-            targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
-        }
+        targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
 
         placedMonstersCount++;
         AddScore(100);
@@ -662,10 +621,7 @@ public class GameManager : MonoBehaviour
         placedMonstersCount--;
 
         BoardCell targetCell = currentBoardView.GetCell(row, col, currentCols);
-        if (targetCell != null)
-        {
-            targetCell.SetMonsterState(false, null, GetBiomeColor(gridData[row, col]));
-        }
+        targetCell.SetMonsterState(false, null, GetBiomeColor(gridData[row, col]));
 
         AddScore(-100);
     }
@@ -712,13 +668,10 @@ public class GameManager : MonoBehaviour
         {
             for (int c = 0; c < currentCols; c++)
             {
-                if (placedMonsters != null && placedMonsters[r, c] == 1)
+                if (placedMonsters[r, c] == 1)
                 {
                     BoardCell cell = currentBoardView.GetCell(r, c, currentCols);
-                    if (cell != null && cell.monsterSprite != null)
-                    {
-                        gameOverSeq.Insert(0, cell.monsterSprite.DOColor(Color.gray, 0.4f).SetUpdate(true));
-                    }
+                    gameOverSeq.Insert(0, cell.monsterSprite.DOColor(Color.gray, 0.4f).SetUpdate(true));
                 }
             }
         }
@@ -929,7 +882,7 @@ public class GameManager : MonoBehaviour
             {
                 cellMarks[row, col] = 1;
                 BoardCell cell = currentBoardView.GetCell(row, col, currentCols);
-                if (cell != null) cell.SetMarkState(true, GetBiomeColor(gridData[row, col]));
+                cell.SetMarkState(true, GetBiomeColor(gridData[row, col]));
             }
         }
 
