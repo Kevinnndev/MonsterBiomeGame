@@ -69,8 +69,6 @@ public class GameManager : MonoBehaviour
 
     [Header("Lives & Score System")]
     public int lives = 3;
-    [Tooltip("Không dùng nữa, chờ xoá khi UI mới hoàn thiện")]
-    public GameObject[] heartIcons; 
     [Header("Lives Display (mới)")]
     public TMPro.TextMeshProUGUI livesCountText;
     public TextMeshProUGUI scoreText;
@@ -632,19 +630,7 @@ public class GameManager : MonoBehaviour
         isTimerRunning = false;
         PlaySFX(loseSound);
 
-        Sequence gameOverSeq = DOTween.Sequence().SetUpdate(true); 
-
-        
-        if (heartIcons != null && heartIcons.Length > 0 && heartIcons[0] != null)
-        {
-            GameObject lastHeart = heartIcons[0];
-            lastHeart.transform.DOKill();
-            
-            gameOverSeq.Append(lastHeart.transform.DOScale(1.3f, 0.15f))
-                       .Append(lastHeart.transform.DOShakeRotation(0.4f, new Vector3(0, 0, 25), 15, 90, false))
-                       .Append(lastHeart.transform.DOScale(Vector3.zero, 0.25f).SetEase(Ease.InBack))
-                       .AppendCallback(() => lastHeart.SetActive(false));
-        }
+        Sequence gameOverSeq = DOTween.Sequence().SetUpdate(true);
 
         
         if (Camera.main != null)
@@ -912,52 +898,6 @@ public class GameManager : MonoBehaviour
         if (freezeTimeBtn != null) freezeTimeBtn.interactable = (freezeTimeCount > 0);
         if (rocketBtn != null) rocketBtn.interactable = (rocketCount > 0);
         if (bowBtn != null) bowBtn.interactable = (bowCount > 0);
-    }
-
-
-    private void PlayHeartEntranceAnimation()
-    {
-        for (int i = 0; i < heartIcons.Length; i++)
-        {
-            if (heartIcons[i] == null || !heartIcons[i].activeSelf) continue;
-
-            Transform t = heartIcons[i].transform;
-            int idx = i; 
-
-          
-            t.DOKill();
-            t.localScale = Vector3.zero;
-
-          
-            t.DOScale(1f, 0.45f)
-             .SetEase(Ease.OutBack)
-             .SetDelay(idx * 0.12f)
-             .OnComplete(() => PlayHeartIdleLoop(heartIcons[idx].transform));
-        }
-    }
-
-
-    private void PlayHeartIdleLoop(Transform heartTrans)
-    {
-        if (heartTrans == null) return;
-
-        heartTrans.DOKill();
-
-        Sequence beat = DOTween.Sequence();
-
-       
-        beat.Append(heartTrans.DOScale(1.20f, 0.13f).SetEase(Ease.OutQuad));
-        beat.Append(heartTrans.DOScale(1.00f, 0.12f).SetEase(Ease.InQuad));
-
-       
-        beat.Append(heartTrans.DOScale(1.10f, 0.10f).SetEase(Ease.OutQuad));
-        beat.Append(heartTrans.DOScale(1.00f, 0.11f).SetEase(Ease.InQuad));
-
-        
-        beat.AppendInterval(0.85f);
-
-      
-        beat.SetLoops(-1, LoopType.Restart);
     }
 
     private void ShowPopupScale(GameObject panel)
