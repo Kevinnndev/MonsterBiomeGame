@@ -4,11 +4,16 @@ using System;
 
 public static class LevelTextParser
 {
-    public static int[,] Parse(string textContent, out int rows, out int cols, out bool[,] solutionCells, out int timeLimitSeconds)
+    /// <summary>
+    /// Parse file text level thành ma trận biome ID.
+    /// Đã bỏ hoàn toàn output solutionCells — đáp án giờ được tính bởi LevelSolver lúc runtime.
+    /// Nếu file cũ vẫn còn dấu '*' sót lại (ví dụ "3*"), parser sẽ tự bỏ qua an toàn
+    /// (coi "3*" tương đương "3") để không phải sửa tay xoá '*' khỏi từng file.
+    /// </summary>
+    public static int[,] Parse(string textContent, out int rows, out int cols, out int timeLimitSeconds)
     {
         string[] rawLines = textContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         List<int[]> rowList = new List<int[]>();
-        List<bool[]> solutionRowList = new List<bool[]>();
         int? expectedColCount = null;
         
         timeLimitSeconds = -1;
@@ -47,15 +52,14 @@ public static class LevelTextParser
             }
 
             int[] columns = new int[rawValues.Length];
-            bool[] solutionColumns = new bool[rawValues.Length];
 
             for (int j = 0; j < rawValues.Length; j++)
             {
                 string token = rawValues[j];
 
-                // Check for '*' solution marker
-                bool isCorrectCell = token.EndsWith("*");
-                if (isCorrectCell)
+                // Bỏ qua dấu '*' sót lại từ file cũ — coi "3*" tương đương "3"
+                // Chỉ strip, không dùng kết quả isCorrectCell cho việc gì nữa
+                if (token.EndsWith("*"))
                 {
                     token = token.TrimEnd('*');
                 }
@@ -68,27 +72,15 @@ public static class LevelTextParser
                     }
                     
                     columns[j] = Mathf.Max(0, biomeId);
-                    
-                    if (columns[j] == 0 && isCorrectCell)
-                    {
-                        Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: Ô trống (0) được đánh dấu là đáp án (*). Đã tự động huỷ đánh dấu.");
-                        solutionColumns[j] = false;
-                    }
-                    else
-                    {
-                        solutionColumns[j] = isCorrectCell;
-                    }
                 }
                 else
                 {
                     Debug.LogWarning($"Cảnh báo ở hàng {i + 1}, cột {j + 1}: Ký tự '{rawValues[j]}' không hợp lệ, tự chuyển thành ô 0.");
                     columns[j] = 0;
-                    solutionColumns[j] = false;
                 }
             }
 
             rowList.Add(columns);
-            solutionRowList.Add(solutionColumns);
         }
 
         if (timeLimitSeconds == -1)
@@ -104,14 +96,12 @@ public static class LevelTextParser
         rows = rowList.Count;
         cols = expectedColCount.Value;
         int[,] grid = new int[rows, cols];
-        solutionCells = new bool[rows, cols];
 
         for (int r = 0; r < rows; r++)
         {
             for (int c = 0; c < cols; c++)
             {
                 grid[r, c] = rowList[r][c];
-                solutionCells[r, c] = solutionRowList[r][c];
             }
         }
 

@@ -314,16 +314,52 @@ public class GameManager : MonoBehaviour
         }
 
         int[,] parsedGrid;
-        bool[,] parsedSolution;
         try
         {
-            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols, out parsedSolution, out timeLimitSeconds);
+            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols, out timeLimitSeconds);
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"[GameManager] Lỗi load level: {ex.Message}");
-            return; // hoặc xử lý fallback phù hợp — không để game crash/treo
+            return; // không để game crash/treo
         }
+
+        // ── DFS Backtracking: tìm nghiệm tại runtime ──────────────────
+        // Chạy 1 lần duy nhất khi load level, KHÔNG chạy mỗi frame.
+        // maxSolutionsToFind = 2: chỉ cần biết "duy nhất hay không", không đếm hết.
+        var solutions = LevelSolver.Solve(parsedGrid, currentRows, currentCols, maxSolutionsToFind: 2);
+
+        // Trường hợp 1: VÔ NGHIỆM — level không thể chơi được
+        if (solutions.Count == 0)
+        {
+            Debug.LogError($"[GameManager] Level {currentLevel} VÔ NGHIỆM — không thể chơi được! " +
+                            "Cần sửa lại file text level này.");
+            // Fallback: huỷ board vừa tạo, quay về main menu để tránh treo game
+            if (currentBoardInstance != null)
+            {
+                Destroy(currentBoardInstance);
+                currentBoardInstance = null;
+                currentBoardView = null;
+            }
+            ExitToMainMenu();
+            return;
+        }
+
+        // Trường hợp 2: NHIỀU HƠN 1 NGHIỆM — puzzle không rõ ràng
+        // Vẫn tiếp tục chạy bằng nghiệm đầu tiên tìm được (không chặn gameplay),
+        // nhưng log phải đủ nổi bật (LogError) để không bị bỏ sót khi test.
+        if (solutions.Count >= 2)
+        {
+            Debug.LogError($"[GameManager] ⚠️ CẢNH BÁO THIẾT KẾ: Level {currentLevel} có NHIỀU HƠN 1 NGHIỆM! " +
+                            "Puzzle không rõ ràng — người chơi có thể bị báo sai dù đặt đúng luật theo nghiệm khác. " +
+                            "Cần kiểm tra lại vùng biome của level này TRƯỚC KHI phát hành.");
+        }
+
+        // Trường hợp 3 (hoặc tiếp nối trường hợp 2): Chuyển nghiệm đầu tiên thành solutionCells
+        solutionCells = new bool[currentRows, currentCols];
+        foreach (var (row, col) in solutions[0])
+            solutionCells[row, col] = true;
+        // ── Kết thúc DFS ───────────────────────────────────────────────
 
         bool isBoardValid = currentBoardView.InitializeBoard(this, parsedGrid, currentRows, currentCols);
         if (!isBoardValid) return;
@@ -332,7 +368,6 @@ public class GameManager : MonoBehaviour
         isTimerRunning = true;
 
         gridData = parsedGrid;
-        solutionCells = parsedSolution;
         placedMonsters = new int[currentRows, currentCols];
         cellMarks = new int[currentRows, currentCols];
         errorCells = new int[currentRows, currentCols];
