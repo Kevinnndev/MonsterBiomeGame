@@ -43,13 +43,13 @@ public static class LevelSolverEditorTool
             string fileName = Path.GetFileName(filePath);
             string content = File.ReadAllText(filePath);
 
-            int rows, cols, timeLimitSeconds;
+            int rows, cols;
             int[,] grid;
 
             // Parse file
             try
             {
-                grid = LevelTextParser.Parse(content, out rows, out cols, out timeLimitSeconds);
+                grid = LevelTextParser.Parse(content, out rows, out cols);
             }
             catch (System.Exception ex)
             {

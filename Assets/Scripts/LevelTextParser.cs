@@ -4,19 +4,11 @@ using System;
 
 public static class LevelTextParser
 {
-    /// <summary>
-    /// Parse file text level thành ma trận biome ID.
-    /// Đã bỏ hoàn toàn output solutionCells — đáp án giờ được tính bởi LevelSolver lúc runtime.
-    /// Nếu file cũ vẫn còn dấu '*' sót lại (ví dụ "3*"), parser sẽ tự bỏ qua an toàn
-    /// (coi "3*" tương đương "3") để không phải sửa tay xoá '*' khỏi từng file.
-    /// </summary>
-    public static int[,] Parse(string textContent, out int rows, out int cols, out int timeLimitSeconds)
+    public static int[,] Parse(string textContent, out int rows, out int cols)
     {
         string[] rawLines = textContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         List<int[]> rowList = new List<int[]>();
         int? expectedColCount = null;
-        
-        timeLimitSeconds = -1;
 
         for (int i = 0; i < rawLines.Length; i++)
         {
@@ -25,20 +17,9 @@ public static class LevelTextParser
             if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
                 continue;
 
-            // Xử lý dòng TIME:
+            // Bỏ qua dòng TIME: nếu file cũ vẫn còn sót — không parse lỗi
             if (line.StartsWith("TIME:", StringComparison.OrdinalIgnoreCase))
-            {
-                string timeStr = line.Substring(5).Trim();
-                if (int.TryParse(timeStr, out int timeVal) && timeVal > 0)
-                {
-                    timeLimitSeconds = timeVal;
-                }
-                else
-                {
-                    throw new Exception($"LỖI PARSE: Dòng TIME không hợp lệ '{line}'. Giá trị thời gian phải là số nguyên dương!");
-                }
                 continue;
-            }
 
             string[] rawValues = line.Split(new char[] { ' ', '\t', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -57,8 +38,7 @@ public static class LevelTextParser
             {
                 string token = rawValues[j];
 
-                // Bỏ qua dấu '*' sót lại từ file cũ — coi "3*" tương đương "3"
-                // Chỉ strip, không dùng kết quả isCorrectCell cho việc gì nữa
+                // Bỏ qua dấu '*' sót lại từ file cũ
                 if (token.EndsWith("*"))
                 {
                     token = token.TrimEnd('*');
@@ -81,11 +61,6 @@ public static class LevelTextParser
             }
 
             rowList.Add(columns);
-        }
-
-        if (timeLimitSeconds == -1)
-        {
-            throw new Exception("LỖI PARSE: Không tìm thấy dòng 'TIME: <số giây>' trong file level!");
         }
 
         if (rowList.Count == 0)

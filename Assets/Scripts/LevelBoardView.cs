@@ -6,6 +6,10 @@ public class LevelBoardView : MonoBehaviour
     [Header("Dữ liệu của màn này")]
     public TextAsset levelTextFile;
 
+    [Header("Giới hạn thời gian")]
+    [Tooltip("Thời gian giới hạn (giây) cho màn này. Chỉnh trực tiếp trong Inspector.")]
+    public int timeLimitSeconds = 60;
+
     [Header("Cài đặt hiển thị 2D")]
     [Tooltip("Kích thước ô tối đa (world units). Sẽ bị thu nhỏ tự động nếu grid quá lớn.")]
     public float maxCellSize = 1.2f;
@@ -16,7 +20,7 @@ public class LevelBoardView : MonoBehaviour
     public GameObject cellPrefab;
 
     private BoardCell[] cells;
-    private float cellSize; // Được tính động khi InitializeBoard
+    private float cellSize; 
 
     public bool InitializeBoard(GameManager gm, int[,] parsedGrid, int requiredRows, int requiredCols)
     {
@@ -32,14 +36,14 @@ public class LevelBoardView : MonoBehaviour
             return false;
         }
 
-        // --- Tính cellSize tự động theo kích thước camera ---
+       
         Camera cam = Camera.main;
         if (cam != null && cam.orthographic)
         {
-            float camHeight = cam.orthographicSize * 2f;              // Chiều cao thế giới
-            float camWidth  = camHeight * cam.aspect;                  // Chiều rộng thế giới
+            float camHeight = cam.orthographicSize * 2f;              
+            float camWidth  = camHeight * cam.aspect;                  
 
-            // cellSize tối đa để board vừa cả chiều dọc lẫn chiều ngang
+ 
             float fitByHeight = (camHeight * screenFillRatio) / requiredRows;
             float fitByWidth  = (camWidth  * screenFillRatio) / requiredCols;
 
@@ -47,7 +51,7 @@ public class LevelBoardView : MonoBehaviour
         }
         else
         {
-            cellSize = maxCellSize; // Fallback nếu không có camera orthographic
+            cellSize = maxCellSize; 
         }
 
         Debug.Log($"[LevelBoardView] Grid {requiredRows}x{requiredCols} → cellSize = {cellSize:F3}");
@@ -72,7 +76,7 @@ public class LevelBoardView : MonoBehaviour
 
                 cellObj.transform.localScale = Vector3.zero;
 
-                // Scale ô theo tỉ lệ cellSize/maxCellSize để giữ gap nhất quán
+      
                 float targetScale = cellSize / maxCellSize;
                 cellObj.transform.DOScale(Vector3.one * targetScale, 0.4f)
                                  .SetEase(Ease.OutBack)

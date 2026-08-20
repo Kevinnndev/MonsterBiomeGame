@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 
+public enum BoosterType { None, FindOne, FreezeTime, Rocket, Bow }
+
 public class GameManager : MonoBehaviour
 {
     [Header("Level Configuration")]
@@ -59,6 +61,7 @@ public class GameManager : MonoBehaviour
     public GameObject nextLevelButton;
     public GameObject topBarPanel;
     public GameObject howToPlayPanel;
+    public GameObject boosterPanel;
 
     [Header("Lives & Score System")]
     public int lives = 3;
@@ -87,6 +90,22 @@ public class GameManager : MonoBehaviour
     public AudioClip winSound;
     public AudioClip loseSound;
 
+    [Header("Booster System")]
+    public int findOneCount = 1;
+    public int freezeTimeCount = 1;
+    public int rocketCount = 1;
+    public int bowCount = 1;
+
+
+    [Header("Booster Buttons")]
+    public Button findOneBtn;
+    public Button freezeTimeBtn;
+    public Button rocketBtn;
+    public Button bowBtn;
+
+    private BoosterType activeBooster = BoosterType.None;
+    private float freezeTimeRemaining = 0f;
+
     private bool isGameOver = false;
     private bool isMusicMuted = false;
     private bool isSFXMuted = false;
@@ -101,16 +120,31 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (!isTimerRunning || isGameOver) return;
+        if (isGameOver) return;
+
+        // Freeze Time: nếu đang freeze, trừ thời gian freeze thay vì trừ timer chính
+        if (freezeTimeRemaining > 0f)
+        {
+            freezeTimeRemaining -= Time.deltaTime;
+            // Vẫn cập nhật UI timer (hiển thị thời gian hiện tại, không đổi) để người chơi thấy đang freeze
+            if (timerText != null)
+            {
+                int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
+                int minutes = secondsLeft / 60;
+                int seconds = secondsLeft % 60;
+                timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+                timerText.color = Color.cyan; // màu đặc biệt báo đang freeze
+            }
+            return; // KHÔNG trừ currentTime trong lúc freeze
+        }
+
+        if (!isTimerRunning) return;
         
         currentTime -= Time.deltaTime;
 
-   
         if (timerText != null)
         {
             int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
-            
-     
             int minutes = secondsLeft / 60;
             int seconds = secondsLeft % 60;
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
@@ -126,7 +160,7 @@ public class GameManager : MonoBehaviour
             currentTime = 0f;
             isTimerRunning = false;
             Debug.Log("[Timer] Hết giờ! Game Over.");
-            GameOver(); // hết giờ = thua NGAY, không trừ mạng
+            GameOver(); 
         }
     }
 
@@ -151,6 +185,20 @@ public class GameManager : MonoBehaviour
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
         if (topBarPanel != null) topBarPanel.SetActive(false);
         if (howToPlayPanel != null) howToPlayPanel.SetActive(false);
+        if (boosterPanel != null)
+        {
+            boosterPanel.SetActive(false);
+            // Tắt raycastTarget trên MỌI graphic không phải Button bên trong BoosterPanel
+            // (Image nền, Text, v.v.) để panel không chặn click board phía dưới.
+            // Chỉ giữ raycast trên Image của Button (cần để nhận click).
+            foreach (var graphic in boosterPanel.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            {
+                if (graphic.GetComponent<Button>() == null)
+                {
+                    graphic.raycastTarget = false;
+                }
+            }
+        }
     }
 
     public void PlaySFX(AudioClip clip)
@@ -245,6 +293,7 @@ public class GameManager : MonoBehaviour
         if (winScreenUI != null) winScreenUI.SetActive(false);
         if (topBarPanel != null) topBarPanel.SetActive(false);
         if (howToPlayPanel != null) howToPlayPanel.SetActive(false);
+        if (boosterPanel != null) boosterPanel.SetActive(false);
         if (restartButton != null) restartButton.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
 
@@ -277,13 +326,9 @@ public class GameManager : MonoBehaviour
         if (winScreenUI != null) winScreenUI.SetActive(false);
         if (restartButton != null) restartButton.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
+        if (boosterPanel != null) boosterPanel.SetActive(true);
 
-        // heartIcons không dùng nữa
-        // for (int i = 0; i < heartIcons.Length; i++)
-        // {
-        //     if (heartIcons[i] != null) heartIcons[i].SetActive(true);
-        // }
-        // PlayHeartEntranceAnimation();
+
 
         if (livesCountText != null) livesCountText.text = "x" + lives;
 
@@ -316,25 +361,22 @@ public class GameManager : MonoBehaviour
         int[,] parsedGrid;
         try
         {
-            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols, out timeLimitSeconds);
+            parsedGrid = LevelTextParser.Parse(textFile.text, out currentRows, out currentCols);
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"[GameManager] Lỗi load level: {ex.Message}");
-            return; // không để game crash/treo
+            return;
         }
 
         // ── DFS Backtracking: tìm nghiệm tại runtime ──────────────────
-        // Chạy 1 lần duy nhất khi load level, KHÔNG chạy mỗi frame.
-        // maxSolutionsToFind = 2: chỉ cần biết "duy nhất hay không", không đếm hết.
         var solutions = LevelSolver.Solve(parsedGrid, currentRows, currentCols, maxSolutionsToFind: 2);
 
-        // Trường hợp 1: VÔ NGHIỆM — level không thể chơi được
         if (solutions.Count == 0)
         {
             Debug.LogError($"[GameManager] Level {currentLevel} VÔ NGHIỆM — không thể chơi được! " +
                             "Cần sửa lại file text level này.");
-            // Fallback: huỷ board vừa tạo, quay về main menu để tránh treo game
+  
             if (currentBoardInstance != null)
             {
                 Destroy(currentBoardInstance);
@@ -345,9 +387,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Trường hợp 2: NHIỀU HƠN 1 NGHIỆM — puzzle không rõ ràng
-        // Vẫn tiếp tục chạy bằng nghiệm đầu tiên tìm được (không chặn gameplay),
-        // nhưng log phải đủ nổi bật (LogError) để không bị bỏ sót khi test.
         if (solutions.Count >= 2)
         {
             Debug.LogError($"[GameManager] ⚠️ CẢNH BÁO THIẾT KẾ: Level {currentLevel} có NHIỀU HƠN 1 NGHIỆM! " +
@@ -355,15 +394,15 @@ public class GameManager : MonoBehaviour
                             "Cần kiểm tra lại vùng biome của level này TRƯỚC KHI phát hành.");
         }
 
-        // Trường hợp 3 (hoặc tiếp nối trường hợp 2): Chuyển nghiệm đầu tiên thành solutionCells
         solutionCells = new bool[currentRows, currentCols];
         foreach (var (row, col) in solutions[0])
             solutionCells[row, col] = true;
-        // ── Kết thúc DFS ───────────────────────────────────────────────
 
         bool isBoardValid = currentBoardView.InitializeBoard(this, parsedGrid, currentRows, currentCols);
         if (!isBoardValid) return;
 
+        // Đọc time limit từ Inspector (LevelBoardView) thay vì file text
+        timeLimitSeconds = currentBoardView.timeLimitSeconds;
         currentTime = timeLimitSeconds;
         isTimerRunning = true;
 
@@ -381,11 +420,24 @@ public class GameManager : MonoBehaviour
                 errorCells[r, c] = 0;
             }
         }
+
+        // Reset booster state khi load level mới
+        activeBooster = BoosterType.None;
+        freezeTimeRemaining = 0f;
+        UpdateBoosterUI();
     }
 
     public void HandleCellClick(int row, int col)
     {
         if (isGameOver) return;
+
+        // Nếu đang ở chế độ ngắm booster (Rocket/Bow), xử lý riêng
+        if (activeBooster != BoosterType.None)
+        {
+            HandleBoosterTargetClick(row, col);
+            return;
+        }
+
         if (errorCells != null && errorCells[row, col] == 1) return; 
         int biomeID = gridData[row, col];
         if (biomeID == 0) return;
@@ -437,16 +489,7 @@ public class GameManager : MonoBehaviour
 
         if (IsValidPlacement(row, col, biomeID))
         {
-            placedMonsters[row, col] = 1;
-            cellMarks[row, col] = 0;
-
-            targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
-
-            placedMonstersCount++;
-            AddScore(100);
-            PlaySFX(placeMonsterSound);
-
-            if (placedMonstersCount >= CountTotalSolutionCells()) GameWin();
+            PlaceMonsterAt(row, col, biomeID);
         }
         else
         {
@@ -462,6 +505,28 @@ public class GameManager : MonoBehaviour
 
             if (lives <= 0) GameOver();
         }
+    }
+
+    /// <summary>
+    /// Hàm lõi đặt quái vật — dùng chung cho cả đặt tay (TryPlaceMonster) và booster (TryAutoPlaceInScope).
+    /// Gọi hàm này KHI ĐÃ XÁC NHẬN ô hợp lệ (solutionCells[row,col] == true, chưa đặt).
+    /// </summary>
+    private void PlaceMonsterAt(int row, int col, int biomeID)
+    {
+        placedMonsters[row, col] = 1;
+        cellMarks[row, col] = 0;
+
+        BoardCell targetCell = currentBoardView.GetCell(row, col, currentCols);
+        if (targetCell != null)
+        {
+            targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
+        }
+
+        placedMonstersCount++;
+        AddScore(100);
+        PlaySFX(placeMonsterSound);
+
+        if (placedMonstersCount >= CountTotalSolutionCells()) GameWin();
     }
 
     void RemoveMonster(int row, int col)
@@ -587,7 +652,7 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         PlaySFX(clickSound);
-        Time.timeScale = 1f; // Bắt buộc reset TimeScale khi Restart
+        Time.timeScale = 1f; 
         currentScore = 0;
         UpdateScoreUI();
 
@@ -624,9 +689,7 @@ public class GameManager : MonoBehaviour
 
     bool IsValidPlacement(int targetRow, int targetCol, int targetBiomeID)
     {
-        // Đã chuyển sang kiểm tra theo đáp án cố định (solutionCells) thay vì
-        // check rule hàng/cột/vùng/kề cạnh như trước — người thiết kế level
-        // phải tự đảm bảo đáp án tuân đúng luật khi viết file text.
+
         if (targetBiomeID == 0) return false;
         return solutionCells[targetRow, targetCol];
     }
@@ -645,15 +708,153 @@ public class GameManager : MonoBehaviour
         return isGameOver;
     }
 
-
     // ─────────────────────────────────────────────────────────────────────
-    // HEART ANIMATIONS
+    // BOOSTER SYSTEM
     // ─────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Pop-in staggered → rồi chạy heartbeat idle liên tục.
-    /// Gọi sau mỗi lần LoadLevel (hearts đã SetActive(true) trước đó).
+    /// Tự tìm ô đáp án chưa đặt trong phạm vi candidateCells, đặt quái vật vào ô đầu tiên tìm được.
+    /// Trả về true nếu đặt thành công, false nếu không còn ô nào trong phạm vi.
     /// </summary>
+    private bool TryAutoPlaceInScope(IEnumerable<(int row, int col)> candidateCells)
+    {
+        foreach (var (row, col) in candidateCells)
+        {
+            if (solutionCells[row, col] && placedMonsters[row, col] == 0)
+            {
+                int biomeID = gridData[row, col];
+                PlaceMonsterAt(row, col, biomeID);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Find One: tự đặt 1 quái vật đúng vị trí bất kỳ trên toàn board.
+    /// </summary>
+    public void OnClickFindOne()
+    {
+        if (findOneCount <= 0 || isGameOver) return;
+
+        var allCells = new List<(int, int)>();
+        for (int r = 0; r < currentRows; r++)
+            for (int c = 0; c < currentCols; c++)
+                allCells.Add((r, c));
+
+        if (TryAutoPlaceInScope(allCells))
+        {
+            findOneCount--;
+            UpdateBoosterUI();
+        }
+    }
+
+    /// <summary>
+    /// Freeze Time: đóng băng timer 15 giây (cộng dồn nếu dùng liên tục).
+    /// </summary>
+    public void OnClickFreezeTime()
+    {
+        if (freezeTimeCount <= 0 || isGameOver) return;
+
+        freezeTimeRemaining += 15f; // cộng dồn nếu đang freeze dở
+        freezeTimeCount--;
+        UpdateBoosterUI();
+    }
+
+    /// <summary>
+    /// Rocket: chọn booster rồi tap vào board — tự đặt quái đúng vị trí trong CỘT được chọn.
+    /// </summary>
+    public void OnClickRocket()
+    {
+        if (rocketCount <= 0 || isGameOver) return;
+        activeBooster = BoosterType.Rocket;
+    }
+
+    /// <summary>
+    /// Bow: chọn booster rồi tap vào board — tự đặt quái đúng vị trí trong HÀNG được chọn.
+    /// </summary>
+    public void OnClickBow()
+    {
+        if (bowCount <= 0 || isGameOver) return;
+        activeBooster = BoosterType.Bow;
+    }
+
+    /// <summary>
+    /// Xử lý khi người chơi tap vào board trong chế độ ngắm Rocket/Bow.
+    /// </summary>
+    private void HandleBoosterTargetClick(int targetRow, int targetCol)
+    {
+        var scope = new List<(int, int)>();
+
+        if (activeBooster == BoosterType.Rocket)
+        {
+            // Rocket: quét toàn bộ CỘT targetCol
+            for (int r = 0; r < currentRows; r++)
+                scope.Add((r, targetCol));
+        }
+        else if (activeBooster == BoosterType.Bow)
+        {
+            // Bow: quét toàn bộ HÀNG targetRow
+            for (int c = 0; c < currentCols; c++)
+                scope.Add((targetRow, c));
+        }
+
+        // Tìm trước ô đáp án đúng còn trống trong phạm vi (không đặt ngay, chỉ xác định vị trí)
+        (int row, int col)? correctCell = null;
+        foreach (var (row, col) in scope)
+        {
+            if (solutionCells[row, col] && placedMonsters[row, col] == 0)
+            {
+                correctCell = (row, col);
+                break;
+            }
+        }
+
+        // Đánh dấu X lên các ô SAI trong phạm vi
+        foreach (var (row, col) in scope)
+        {
+            bool isCorrect = correctCell != null && row == correctCell.Value.row && col == correctCell.Value.col;
+            bool isEmpty = gridData[row, col] == 0;
+            bool alreadyPlaced = placedMonsters[row, col] == 1;
+
+            if (!isCorrect && !isEmpty && !alreadyPlaced)
+            {
+                cellMarks[row, col] = 1;
+                BoardCell cell = currentBoardView.GetCell(row, col, currentCols);
+                if (cell != null) cell.SetMarkState(true, GetBiomeColor(gridData[row, col]));
+            }
+        }
+
+        // Trừ count ngay vì hành động đánh dấu X đã coi như tiêu lượt booster
+        if (activeBooster == BoosterType.Rocket) rocketCount--;
+        else if (activeBooster == BoosterType.Bow) bowCount--;
+        UpdateBoosterUI();
+
+        activeBooster = BoosterType.None; // Thoát chế độ ngắm ngay
+
+        if (correctCell == null)
+        {
+            return; // Không còn ô đáp án để tự đặt, nhưng đã đánh dấu X
+        }
+
+        // Delay 0.4s để người chơi kịp nhìn thấy các ô X, sau đó đặt quái vật vào ô đáp án
+        DG.Tweening.DOVirtual.DelayedCall(0.4f, () =>
+        {
+            var (r, c) = correctCell.Value;
+            cellMarks[r, c] = 0; // Đảm bảo ô đáp án không bị dính cellMarks=1
+            TryAutoPlaceInScope(new List<(int, int)> { (r, c) });
+        });
+    }
+
+    private void UpdateBoosterUI()
+    {
+        if (findOneBtn != null) findOneBtn.interactable = (findOneCount > 0);
+        if (freezeTimeBtn != null) freezeTimeBtn.interactable = (freezeTimeCount > 0);
+        if (rocketBtn != null) rocketBtn.interactable = (rocketCount > 0);
+        if (bowBtn != null) bowBtn.interactable = (bowCount > 0);
+    }
+
+
     private void PlayHeartEntranceAnimation()
     {
         for (int i = 0; i < heartIcons.Length; i++)
@@ -661,13 +862,13 @@ public class GameManager : MonoBehaviour
             if (heartIcons[i] == null || !heartIcons[i].activeSelf) continue;
 
             Transform t = heartIcons[i].transform;
-            int idx = i; // capture cho lambda
+            int idx = i; 
 
-            // Kill tween cũ (idle cũ từ màn trước nếu có)
+          
             t.DOKill();
             t.localScale = Vector3.zero;
 
-            // Pop-in: scale 0 → 1.3 (overshoot) → 1.0, delay theo thứ tự
+          
             t.DOScale(1f, 0.45f)
              .SetEase(Ease.OutBack)
              .SetDelay(idx * 0.12f)
@@ -675,10 +876,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Heartbeat idle: 2 nhịp đập nhanh rồi nghỉ, lặp vô tận.
-    /// Pattern: thu nhỏ → phình to nhanh (nhịp 1) → to nhanh (nhịp 2) → về bình thường → chờ.
-    /// </summary>
+
     private void PlayHeartIdleLoop(Transform heartTrans)
     {
         if (heartTrans == null) return;
@@ -687,18 +885,18 @@ public class GameManager : MonoBehaviour
 
         Sequence beat = DOTween.Sequence();
 
-        // Nhịp 1 — đập mạnh
+       
         beat.Append(heartTrans.DOScale(1.20f, 0.13f).SetEase(Ease.OutQuad));
         beat.Append(heartTrans.DOScale(1.00f, 0.12f).SetEase(Ease.InQuad));
 
-        // Nhịp 2 — đập nhẹ hơn (như tim thật)
+       
         beat.Append(heartTrans.DOScale(1.10f, 0.10f).SetEase(Ease.OutQuad));
         beat.Append(heartTrans.DOScale(1.00f, 0.11f).SetEase(Ease.InQuad));
 
-        // Nghỉ giữa các chu kỳ
+        
         beat.AppendInterval(0.85f);
 
-        // Lặp vô tận
+      
         beat.SetLoops(-1, LoopType.Restart);
     }
 
