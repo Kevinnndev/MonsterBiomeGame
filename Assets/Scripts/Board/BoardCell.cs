@@ -12,7 +12,8 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
     [SerializeField] private SpriteRenderer markIcon;
 
     private int row, col;
-    private GameManager gameManager;
+    private System.Action<int, int> onClickCallback;
+    private System.Func<bool> canInteractCallback;
     private Vector3 originalScale;
     private Vector3 markIconOriginalScale;
 
@@ -22,22 +23,51 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         markIcon.enabled = false;
     }
 
-    public void InitCell(int r, int c, GameManager gm)
+    private void OnDestroy()
+    {
+        transform.DOKill();
+        if (cellSprite != null) cellSprite.DOKill();
+        if (monsterSprite != null) monsterSprite.transform.DOKill();
+        if (markIcon != null) markIcon.transform.DOKill();
+    }
+
+    public void InitCell(int r, int c, System.Action<int, int> clickHandler, System.Func<bool> interactableCheck = null)
     {
         row = r;
         col = c;
-        gameManager = gm;
+        onClickCallback = clickHandler;
+        canInteractCallback = interactableCheck;
         originalScale = Vector3.one;
+    }
+
+    public void InitCell(int r, int c, GameManager gm)
+    {
+        InitCell(r, c, gm.HandleCellClick, () => !gm.IsGameOver());
+    }
+
+    private int lastHandledFrame = -1;
+
+    private void HandleClick()
+    {
+        if (canInteractCallback != null && !canInteractCallback.Invoke()) return;
+        if (Time.frameCount == lastHandledFrame) return;
+        lastHandledFrame = Time.frameCount;
+        onClickCallback?.Invoke(row, col);
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        gameManager.HandleCellClick(row, col);
+        HandleClick();
+    }
+
+    private void OnMouseDown()
+    {
+        HandleClick();
     }
 
     private void OnMouseEnter()
     {
-        if (!gameManager.IsGameOver())
+        if (canInteractCallback == null || canInteractCallback.Invoke())
         {
             transform.DOKill();
             transform.DOScale(originalScale * 1.05f, 0.15f).SetEase(Ease.OutQuad);
@@ -53,17 +83,25 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
     public void SetupCell(int biomeID, Color biomeColor)
     {
         Color color = new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
+        BoxCollider2D col2D = GetComponent<BoxCollider2D>();
 
         if (biomeID == 0)
         {
             cellSprite.enabled = false;
-            GetComponent<BoxCollider2D>().enabled = false;
+            if (col2D != null) col2D.enabled = false;
         }
         else
         {
             cellSprite.enabled = true;
             cellSprite.color = color;
-            GetComponent<BoxCollider2D>().enabled = true;
+            if (col2D != null)
+            {
+                col2D.enabled = true;
+                if (cellSprite != null && cellSprite.sprite != null)
+                {
+                    col2D.size = cellSprite.sprite.rect.size / cellSprite.sprite.pixelsPerUnit;
+                }
+            }
         }
         monsterSprite.enabled = false;
         markIcon.enabled = false;
@@ -97,12 +135,19 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         if (hasMonster)
         {
             monsterSprite.enabled = true;
-            monsterSprite.sprite = sprite;
+            monsterSprite.color = Color.white;
+            if (cellSprite != null) monsterSprite.sortingOrder = cellSprite.sortingOrder + 1; // Force render on top
+            if (sprite != null) monsterSprite.sprite = sprite;
             markIcon.enabled = false;
 
             ScaleSpriteToFit();
 
             Vector3 targetScale = monsterSprite.transform.localScale;
+            if (targetScale.x <= 0.001f || targetScale.y <= 0.001f)
+            {
+                targetScale = Vector3.one * 0.8f;
+            }
+
             monsterSprite.transform.localScale = Vector3.zero;
             monsterSprite.transform.DOKill();
             monsterSprite.transform.DOScale(targetScale, 0.35f).SetEase(Ease.OutBack);
@@ -127,10 +172,15 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
                 markIcon.enabled = false;
 
                 monsterSprite.enabled = true;
-                monsterSprite.sprite = errorSprite;
+                if (errorSprite != null) monsterSprite.sprite = errorSprite;
                 ScaleSpriteToFit();
 
                 Vector3 targetScale = monsterSprite.transform.localScale;
+                if (targetScale.x <= 0.001f || targetScale.y <= 0.001f)
+                {
+                    targetScale = Vector3.one * 0.8f;
+                }
+
                 monsterSprite.transform.localScale = Vector3.zero;
                 monsterSprite.transform.DOKill();
                 monsterSprite.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutBack);
@@ -139,20 +189,27 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
     private void ScaleSpriteToFit()
     {
-        if (monsterSprite.sprite == null || cellSprite.sprite == null) return;
+        if (monsterSprite == null || monsterSprite.sprite == null) return;
 
         monsterSprite.transform.localScale = Vector3.one;
 
-        Vector3 cellBounds = cellSprite.bounds.size;
-        Vector3 monsterBounds = monsterSprite.bounds.size;
-
-        float targetSize = Mathf.Min(cellBounds.x, cellBounds.y) * 0.8f;
-        float currentMaxDimension = Mathf.Max(monsterBounds.x, monsterBounds.y);
-
-        if (currentMaxDimension > 0)
+        if (cellSprite != null && cellSprite.sprite != null)
         {
-            float scale = targetSize / currentMaxDimension;
-            monsterSprite.transform.localScale = new Vector3(scale, scale, 1f);
+            Vector3 cellBounds = cellSprite.bounds.size;
+            Vector3 monsterBounds = monsterSprite.bounds.size;
+
+            float targetSize = Mathf.Min(cellBounds.x, cellBounds.y) * 0.8f;
+            float currentMaxDimension = Mathf.Max(monsterBounds.x, monsterBounds.y);
+
+            if (currentMaxDimension > 0)
+            {
+                float scale = targetSize / currentMaxDimension;
+                monsterSprite.transform.localScale = new Vector3(scale, scale, 1f);
+            }
+        }
+        else
+        {
+            monsterSprite.transform.localScale = Vector3.one * 0.8f;
         }
     }
 }

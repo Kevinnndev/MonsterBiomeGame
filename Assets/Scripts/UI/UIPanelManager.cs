@@ -1,0 +1,121 @@
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+using DG.Tweening;
+
+public class UIPanelManager : MonoBehaviour
+{
+    [Header("Panels & UI References")]
+    public GameObject mainMenuUI;
+    public GameObject settingsPanel;
+    public GameObject gameOverUI;
+    public GameObject winScreenUI;
+    public GameObject restartButton;
+    public GameObject nextLevelButton;
+    public GameObject topBarPanel;
+    public GameObject howToPlayPanel;
+    public GameObject boosterPanel;
+
+    public void InitializeUI()
+    {
+        mainMenuUI.SetActive(true);
+        settingsPanel.SetActive(false);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        topBarPanel.SetActive(false);
+        howToPlayPanel.SetActive(false);
+        boosterPanel.SetActive(false);
+    }
+
+    public void ShowMainMenuUI()
+    {
+        settingsPanel.SetActive(false);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        topBarPanel.SetActive(false);
+        boosterPanel.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        mainMenuUI.SetActive(true);
+    }
+
+    public void ShowLevelUI()
+    {
+        mainMenuUI.SetActive(false);
+        settingsPanel.SetActive(false);
+        gameOverUI.SetActive(false);
+        winScreenUI.SetActive(false);
+        howToPlayPanel.SetActive(false);
+        restartButton.SetActive(false);
+        nextLevelButton.SetActive(false);
+        topBarPanel.SetActive(true);
+        boosterPanel.SetActive(true);
+    }
+
+    public void ShowPanel(GameObject panel)
+    {
+        if (panel == null) return;
+        panel.SetActive(true);
+        RectTransform rect = panel.GetComponent<RectTransform>();
+        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+        if (rect != null)
+        {
+            rect.DOKill();
+            rect.anchoredPosition = new Vector2(0, 800);
+            rect.DOAnchorPos(Vector2.zero, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
+        }
+        if (cg != null)
+        {
+            cg.DOKill();
+            cg.alpha = 0f;
+            cg.DOFade(1f, 0.4f).SetUpdate(true);
+        }
+    }
+
+    public void HidePanel(GameObject panel, bool resumeTime)
+    {
+        if (panel == null) return;
+        RectTransform rect = panel.GetComponent<RectTransform>();
+        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+
+        Sequence seq = DOTween.Sequence().SetUpdate(true);
+        if (rect != null)
+        {
+            rect.DOKill();
+            seq.Join(rect.DOAnchorPos(new Vector2(0, -800), 0.3f).SetEase(Ease.InBack));
+        }
+        if (cg != null)
+        {
+            cg.DOKill();
+            seq.Join(cg.DOFade(0f, 0.3f));
+        }
+
+        seq.OnComplete(() => {
+            panel.SetActive(false);
+            if (resumeTime) Time.timeScale = 1f;
+        });
+    }
+
+    public void ShowPopupScale(GameObject panel)
+    {
+        if (panel == null) return;
+        panel.SetActive(true);
+        panel.transform.DOKill();
+        panel.transform.localScale = Vector3.zero;
+        panel.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
+    }
+
+    private void DisableNonButtonRaycastTargets(GameObject root)
+    {
+        if (root == null) return;
+        foreach (var graphic in root.GetComponentsInChildren<Graphic>(true))
+        {
+            if (graphic.GetComponentInParent<Button>() == null)
+            {
+                graphic.raycastTarget = false;
+            }
+        }
+    }
+}

@@ -53,8 +53,6 @@ public class LevelBoardView : MonoBehaviour
             cellSize = maxCellSize;
         }
 
-        Debug.Log($"[LevelBoardView] Grid {requiredRows}x{requiredCols} → cellSize = {cellSize:F3}");
-
         int totalCells = requiredRows * requiredCols;
         cells = new BoardCell[totalCells];
 

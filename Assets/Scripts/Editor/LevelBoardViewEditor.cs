@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEditor;
+using MonsterBiome.Core.Parsers;
+using MonsterBiome.Core.Algorithms;
 
 [CustomEditor(typeof(LevelBoardView))]
 public class LevelBoardViewEditor : Editor

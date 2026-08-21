@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using MonsterBiome.Core.Parsers;
+using MonsterBiome.Core.Algorithms;
 
 public static class LevelSolverEditorTool
 {
