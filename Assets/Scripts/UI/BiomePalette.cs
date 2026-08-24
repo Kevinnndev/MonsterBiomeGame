@@ -7,6 +7,16 @@ public class BiomePalette : MonoBehaviour
     public Sprite[] monsterSprites;
     public Sprite brokenHeartSprite;
 
+    private void Awake()
+    {
+        if (biomeColors == null || biomeColors.Length == 0)
+            Debug.LogError($"[BiomePalette] biomeColors is empty on {name}. Biome colors will render as white.", this);
+        if (monsterSprites == null || monsterSprites.Length == 0)
+            Debug.LogError($"[BiomePalette] monsterSprites is empty on {name}. Placed monsters will be invisible.", this);
+        if (brokenHeartSprite == null)
+            Debug.LogError($"[BiomePalette] brokenHeartSprite is not assigned on {name}.", this);
+    }
+
     public Color GetBiomeColor(int biomeID)
     {
         if (biomeColors == null || biomeColors.Length <= 1) return Color.white;

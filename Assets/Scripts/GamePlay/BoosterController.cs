@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -13,6 +14,14 @@ public class BoosterController : MonoBehaviour
     public Button bowBtn;
 
     private readonly BoosterCore model = new BoosterCore();
+
+    [Header("Dependencies")]
+    [SerializeField] private BoardMoveExecutor moveExecutor;
+    [SerializeField] private TimerController timerController;
+
+    private Func<BoardState> boardStateProvider;
+    private Func<bool> gameOverProvider;
+    private Tween delayedPlaceTween;
 
     public BoosterCore Model => model;
     public BoosterType ActiveBooster => model.ActiveBooster;
@@ -42,11 +51,28 @@ public class BoosterController : MonoBehaviour
     private void Awake()
     {
         model.OnBoosterCountsChanged += UpdateBoosterUI;
+        model.OnFindOneRequested += HandleFindOne;
+        model.OnFreezeTimeRequested += HandleFreezeTime;
+        model.OnBoosterTargetClicked += ProcessBoosterTarget;
     }
 
     private void OnDestroy()
     {
         model.OnBoosterCountsChanged -= UpdateBoosterUI;
+        model.OnFindOneRequested -= HandleFindOne;
+        model.OnFreezeTimeRequested -= HandleFreezeTime;
+        model.OnBoosterTargetClicked -= ProcessBoosterTarget;
+
+        delayedPlaceTween?.Kill();
+        delayedPlaceTween = null;
+    }
+
+    public void Initialize(Func<BoardState> stateProvider, Func<bool> gameOverCheck, BoardMoveExecutor executor, TimerController timer)
+    {
+        boardStateProvider = stateProvider;
+        gameOverProvider = gameOverCheck;
+        moveExecutor = executor;
+        timerController = timer;
     }
 
     public void ResetBoosters(int findOne = 1, int freezeTime = 1, int rocket = 1, int bow = 1)
@@ -59,15 +85,12 @@ public class BoosterController : MonoBehaviour
         EnsureBoosterButtons();
     }
 
-    public void EnsureBoosterButtons(GameObject panel = null)
+    public void EnsureBoosterButtons()
     {
-        Transform root = panel != null ? panel.transform : transform;
-        Button[] sceneButtons = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-        if (findOneBtn == null) findOneBtn = FindButton(root, "FindOneBtn", "Find One", "FindOne", "BtnFindOne", "FindOneButton") ?? MatchButton(sceneButtons, "FindOneBtn", "Find One", "FindOne");
-        if (freezeTimeBtn == null) freezeTimeBtn = FindButton(root, "FreezeTimeBtn", "Freeze Time", "FreezeTime", "BtnFreezeTime", "FreezeTimeButton") ?? MatchButton(sceneButtons, "FreezeTimeBtn", "Freeze Time", "FreezeTime");
-        if (rocketBtn == null) rocketBtn = FindButton(root, "RocketBtn", "Rocket", "RocketButton", "BtnRocket") ?? MatchButton(sceneButtons, "RocketBtn", "Rocket");
-        if (bowBtn == null) bowBtn = FindButton(root, "BowBtn", "Bow", "BowButton", "BtnBow") ?? MatchButton(sceneButtons, "BowBtn", "Bow");
+        if (findOneBtn == null || freezeTimeBtn == null || rocketBtn == null || bowBtn == null)
+        {
+            Debug.LogError($"[BoosterController] Booster buttons are not fully assigned on {name}. Assign them in the Inspector.", this);
+        }
 
         BindButton(findOneBtn, HandleFindOneBtnClick);
         BindButton(freezeTimeBtn, HandleFreezeTimeBtnClick);
@@ -75,66 +98,6 @@ public class BoosterController : MonoBehaviour
         BindButton(bowBtn, HandleBowBtnClick);
 
         UpdateBoosterUI();
-    }
-
-    private Button FindButton(Transform root, params string[] possibleNames)
-    {
-        if (root == null) return null;
-        foreach (string name in possibleNames)
-        {
-            Transform t = root.Find(name);
-            if (t == null)
-            {
-                foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
-                {
-                    if (child.name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        t = child;
-                        break;
-                    }
-                }
-            }
-            if (t != null)
-            {
-                Button btn = t.GetComponent<Button>();
-                if (btn != null) return btn;
-            }
-        }
-        return null;
-    }
-
-    private Button MatchButton(Button[] sceneButtons, params string[] possibleNames)
-    {
-        if (sceneButtons == null) return null;
-        foreach (var btn in sceneButtons)
-        {
-            if (btn == null) continue;
-            foreach (string name in possibleNames)
-            {
-                if (btn.gameObject.name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                    btn.gameObject.name.Replace(" ", "").Equals(name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase))
-                {
-                    return btn;
-                }
-            }
-        }
-        foreach (var btn in sceneButtons)
-        {
-            if (btn == null) continue;
-            var tmp = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
-            if (tmp != null)
-            {
-                foreach (string name in possibleNames)
-                {
-                    if (tmp.text.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                        tmp.text.Replace(" ", "").Equals(name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase))
-                    {
-                        return btn;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private void BindButton(Button btn, UnityEngine.Events.UnityAction action)
@@ -148,28 +111,30 @@ public class BoosterController : MonoBehaviour
         btn.onClick.AddListener(action);
     }
 
+    private bool IsGameOver() => gameOverProvider != null && gameOverProvider.Invoke();
+
     private void HandleFindOneBtnClick()
     {
-        if (findOneBtn) findOneBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
-        OnClickFindOne(false);
+        findOneBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        OnClickFindOne(IsGameOver());
     }
 
     private void HandleFreezeTimeBtnClick()
     {
-        if (freezeTimeBtn) freezeTimeBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
-        OnClickFreezeTime(false);
+        freezeTimeBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        OnClickFreezeTime(IsGameOver());
     }
 
     private void HandleRocketBtnClick()
     {
-        if (rocketBtn) rocketBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
-        OnClickRocket(false);
+        rocketBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        OnClickRocket(IsGameOver());
     }
 
     private void HandleBowBtnClick()
     {
-        if (bowBtn) bowBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
-        OnClickBow(false);
+        bowBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        OnClickBow(IsGameOver());
     }
 
     public void OnClickFindOne(bool isGameOver = false) => model.OnClickFindOne(isGameOver);
@@ -180,11 +145,108 @@ public class BoosterController : MonoBehaviour
     public void HandleCellClickWithBooster(int row, int col) => model.HandleCellClickWithBooster(row, col);
     public void ClearActiveBooster() => model.ClearActiveBooster();
 
+    private void HandleFindOne()
+    {
+        BoardState state = boardStateProvider?.Invoke();
+        if (state == null) return;
+
+        var allCells = new List<(int, int)>();
+        for (int r = 0; r < state.Rows; r++)
+            for (int c = 0; c < state.Cols; c++)
+                allCells.Add((r, c));
+
+        if (TryAutoPlaceInScope(allCells))
+        {
+            model.ConsumeFindOne();
+        }
+    }
+
+    private void HandleFreezeTime()
+    {
+        timerController.AddFreezeTime(15f);
+    }
+
+    private void ProcessBoosterTarget(int targetRow, int targetCol, BoosterType boosterType)
+    {
+        BoardState state = boardStateProvider?.Invoke();
+        if (state == null) return;
+
+        var scope = new List<(int, int)>();
+
+        if (boosterType == BoosterType.Rocket)
+        {
+            for (int r = 0; r < state.Rows; r++)
+                scope.Add((r, targetCol));
+        }
+        else if (boosterType == BoosterType.Bow)
+        {
+            for (int c = 0; c < state.Cols; c++)
+                scope.Add((targetRow, c));
+        }
+
+        (int row, int col)? correctCell = null;
+        foreach (var (row, col) in scope)
+        {
+            if (state.SolutionCells[row, col] && state.PlacedMonsters[row, col] == 0)
+            {
+                correctCell = (row, col);
+                break;
+            }
+        }
+
+        foreach (var (row, col) in scope)
+        {
+            bool isCorrect = correctCell != null && row == correctCell.Value.row && col == correctCell.Value.col;
+            bool isEmpty = state.GridData[row, col] == 0;
+            bool alreadyPlaced = state.PlacedMonsters[row, col] == 1;
+
+            if (!isCorrect && !isEmpty && !alreadyPlaced)
+            {
+                moveExecutor.ToggleMark(row, col, state.GridData[row, col]);
+            }
+        }
+
+        if (correctCell != null)
+        {
+            delayedPlaceTween?.Kill();
+            BoardState targetBoardState = state;
+
+            delayedPlaceTween = DOVirtual.DelayedCall(0.4f, () =>
+            {
+                delayedPlaceTween = null;
+                bool over = gameOverProvider.Invoke();
+                BoardState current = boardStateProvider.Invoke();
+                if (over || current == null || current != targetBoardState) return;
+                var (r, c) = correctCell.Value;
+                TryAutoPlaceInScope(new List<(int, int)> { (r, c) });
+            });
+        }
+    }
+
+    private bool TryAutoPlaceInScope(IEnumerable<(int row, int col)> candidateCells)
+    {
+        BoardState state = boardStateProvider.Invoke();
+
+        foreach (var (row, col) in candidateCells)
+        {
+            if (state.SolutionCells[row, col] && state.PlacedMonsters[row, col] == 0)
+            {
+                int biomeID = state.GridData[row, col];
+                if (biomeID != 0)
+                {
+                    moveExecutor.PlaceMonsterAt(row, col, biomeID);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void UpdateBoosterUI()
     {
-        if (findOneBtn) findOneBtn.interactable = (model.FindOneCount > 0);
-        if (freezeTimeBtn) freezeTimeBtn.interactable = (model.FreezeTimeCount > 0);
-        if (rocketBtn) rocketBtn.interactable = (model.RocketCount > 0);
-        if (bowBtn) bowBtn.interactable = (model.BowCount > 0);
+        findOneBtn.interactable = (model.FindOneCount > 0);
+        freezeTimeBtn.interactable = (model.FreezeTimeCount > 0);
+        rocketBtn.interactable = (model.RocketCount > 0);
+        bowBtn.interactable = (model.BowCount > 0);
     }
 }

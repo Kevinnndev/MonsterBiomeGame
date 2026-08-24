@@ -29,6 +29,24 @@ public class UIPanelManager : MonoBehaviour
         boosterPanel.SetActive(false);
     }
 
+    private void Awake()
+    {
+        ReportIfMissing(mainMenuUI, nameof(mainMenuUI));
+        ReportIfMissing(settingsPanel, nameof(settingsPanel));
+        ReportIfMissing(gameOverUI, nameof(gameOverUI));
+        ReportIfMissing(winScreenUI, nameof(winScreenUI));
+        ReportIfMissing(restartButton, nameof(restartButton));
+        ReportIfMissing(nextLevelButton, nameof(nextLevelButton));
+        ReportIfMissing(topBarPanel, nameof(topBarPanel));
+        ReportIfMissing(howToPlayPanel, nameof(howToPlayPanel));
+        ReportIfMissing(boosterPanel, nameof(boosterPanel));
+    }
+
+    private void ReportIfMissing(GameObject obj, string fieldName)
+    {
+        if (obj == null) Debug.LogError($"[UIPanelManager] '{fieldName}' is not assigned on {name}.", this);
+    }
+
     public void ShowMainMenuUI()
     {
         settingsPanel.SetActive(false);
@@ -56,16 +74,12 @@ public class UIPanelManager : MonoBehaviour
 
     public void ShowPanel(GameObject panel)
     {
-        if (panel == null) return;
         panel.SetActive(true);
         RectTransform rect = panel.GetComponent<RectTransform>();
         CanvasGroup cg = panel.GetComponent<CanvasGroup>();
-        if (rect != null)
-        {
-            rect.DOKill();
-            rect.anchoredPosition = new Vector2(0, 800);
-            rect.DOAnchorPos(Vector2.zero, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
-        }
+        rect.DOKill();
+        rect.anchoredPosition = new Vector2(0, 800);
+        rect.DOAnchorPos(Vector2.zero, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
         if (cg != null)
         {
             cg.DOKill();
@@ -76,16 +90,12 @@ public class UIPanelManager : MonoBehaviour
 
     public void HidePanel(GameObject panel, bool resumeTime)
     {
-        if (panel == null) return;
         RectTransform rect = panel.GetComponent<RectTransform>();
         CanvasGroup cg = panel.GetComponent<CanvasGroup>();
 
         Sequence seq = DOTween.Sequence().SetUpdate(true);
-        if (rect != null)
-        {
-            rect.DOKill();
-            seq.Join(rect.DOAnchorPos(new Vector2(0, -800), 0.3f).SetEase(Ease.InBack));
-        }
+        rect.DOKill();
+        seq.Join(rect.DOAnchorPos(new Vector2(0, -800), 0.3f).SetEase(Ease.InBack));
         if (cg != null)
         {
             cg.DOKill();
@@ -100,7 +110,6 @@ public class UIPanelManager : MonoBehaviour
 
     public void ShowPopupScale(GameObject panel)
     {
-        if (panel == null) return;
         panel.SetActive(true);
         panel.transform.DOKill();
         panel.transform.localScale = Vector3.zero;

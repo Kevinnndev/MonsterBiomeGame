@@ -1,0 +1,243 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using MonsterBiome.Core.Models;
+
+[DefaultExecutionOrder(-50)]
+[RequireComponent(typeof(BoardMoveExecutor))]
+[RequireComponent(typeof(BoardInputController))]
+public class GameManager : MonoBehaviour
+{
+    [Header("Modular Controllers")]
+    [SerializeField] private LevelFlowController levelFlowController;
+    [SerializeField] private GameEndSequenceController gameEndSequenceController;
+    [SerializeField] private BiomePalette biomePalette;
+    [SerializeField] private AudioManager audioManager;
+    [SerializeField] private UIPanelManager uiPanelManager;
+    [SerializeField] private SettingsController settingsController;
+    [SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private LivesManager livesManager;
+    [SerializeField] private TimerController timerController;
+    [SerializeField] private LevelLoader levelLoader;
+    [SerializeField] private BoosterController boosterController;
+    [SerializeField] private BoardMoveExecutor moveExecutor;
+    [SerializeField] private BoardInputController inputController;
+
+    private bool isGameOver = false;
+
+    public int currentLevel => levelFlowController.currentLevel;
+    public BoardState boardState => levelFlowController.CurrentBoardState;
+    public LevelBoardView currentBoardView => levelFlowController.CurrentBoardView;
+
+    public int[,] gridData => boardState?.GridData;
+    public bool[,] solutionCells => boardState?.SolutionCells;
+    public int[,] placedMonsters => boardState?.PlacedMonsters;
+    public int[,] cellMarks => boardState?.CellMarks;
+    public int[,] errorCells => boardState?.ErrorCells;
+
+    public Color GetBiomeColor(int biomeID) => biomePalette.GetBiomeColor(biomeID);
+    public Sprite GetMonsterSprite(int biomeID) => biomePalette.GetMonsterSprite(biomeID);
+    public bool IsGameOver() => isGameOver;
+
+    private T GetOrAddComponent<T>() where T : Component
+    {
+        T comp = GetComponent<T>();
+        if (comp == null) comp = FindFirstObjectByType<T>(FindObjectsInactive.Include);
+        if (comp == null)
+        {
+            Debug.LogWarning($"[GameManager] {typeof(T).Name} not found in scene, auto-created on {name}. Assign it in the Inspector to keep scene setup explicit.", this);
+            comp = gameObject.AddComponent<T>();
+        }
+        return comp;
+    }
+
+    private void Awake()
+    {
+        EnsureModularComponents();
+    }
+
+    private void EnsureModularComponents()
+    {
+        if (levelFlowController == null) levelFlowController = GetOrAddComponent<LevelFlowController>();
+        if (gameEndSequenceController == null) gameEndSequenceController = GetOrAddComponent<GameEndSequenceController>();
+        if (biomePalette == null) biomePalette = GetOrAddComponent<BiomePalette>();
+        if (audioManager == null) audioManager = GetOrAddComponent<AudioManager>();
+        if (uiPanelManager == null) uiPanelManager = GetOrAddComponent<UIPanelManager>();
+        if (settingsController == null) settingsController = GetOrAddComponent<SettingsController>();
+        if (scoreManager == null) scoreManager = GetOrAddComponent<ScoreManager>();
+        if (livesManager == null) livesManager = GetOrAddComponent<LivesManager>();
+        if (timerController == null) timerController = GetOrAddComponent<TimerController>();
+        if (levelLoader == null) levelLoader = GetOrAddComponent<LevelLoader>();
+        if (boosterController == null) boosterController = GetOrAddComponent<BoosterController>();
+        if (moveExecutor == null) moveExecutor = GetComponent<BoardMoveExecutor>();
+        if (inputController == null) inputController = GetComponent<BoardInputController>();
+    }
+
+    private void Start()
+    {
+        EnsureModularComponents();
+
+        levelFlowController.Initialize(levelLoader, livesManager, scoreManager, uiPanelManager,
+            boosterController, timerController, audioManager);
+        gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager);
+        boosterController.Initialize(() => boardState, () => isGameOver, moveExecutor, timerController);
+
+        timerController.OnTimerExpired += GameOver;
+        livesManager.OnLivesDepleted += GameOver;
+        gameEndSequenceController.OnGameOverTriggered += () => isGameOver = true;
+        gameEndSequenceController.OnGameWinTriggered += () => isGameOver = true;
+        levelFlowController.OnLevelLoadedSuccessfully += HandleLevelLoaded;
+
+        moveExecutor.Initialize(() => boardState, () => currentBoardView,
+            biomePalette, audioManager, scoreManager, livesManager, settingsController);
+        moveExecutor.OnBoardCompleted += GameWin;
+
+        inputController.Initialize(() => boardState, () => isGameOver, boosterController);
+        inputController.PlaceRequested += HandlePlaceRequested;
+        inputController.MarkRequested += HandleMarkRequested;
+        inputController.RemoveRequested += HandleRemoveRequested;
+        inputController.ClickSoundRequested += PlayClick;
+
+        uiPanelManager.InitializeUI();
+        UpdateToggleButtonsUI();
+    }
+
+    private void OnDestroy()
+    {
+        timerController.OnTimerExpired -= GameOver;
+        livesManager.OnLivesDepleted -= GameOver;
+
+        moveExecutor.OnBoardCompleted -= GameWin;
+        inputController.PlaceRequested -= HandlePlaceRequested;
+        inputController.MarkRequested -= HandleMarkRequested;
+        inputController.RemoveRequested -= HandleRemoveRequested;
+        inputController.ClickSoundRequested -= PlayClick;
+    }
+
+    private void HandlePlaceRequested(int row, int col, int biomeID)
+    {
+        moveExecutor.TryPlaceMonster(row, col, biomeID);
+    }
+
+    private void HandleMarkRequested(int row, int col, int biomeID)
+    {
+        moveExecutor.ToggleMark(row, col, biomeID);
+    }
+
+    private void HandleRemoveRequested(int row, int col)
+    {
+        moveExecutor.RemoveMonster(row, col);
+    }
+
+    private void PlayClick()
+    {
+        audioManager.PlayClick();
+    }
+
+    // --- Level Flow Delegates ---
+    public void StartGame()
+    {
+        levelFlowController.StartGame(this);
+    }
+
+    public void LoadLevel(int levelIndex)
+    {
+        levelFlowController.LoadLevel(levelIndex, this);
+    }
+
+    public void NextLevel()
+    {
+        levelFlowController.NextLevel(this);
+    }
+
+    public void RestartGame()
+    {
+        levelFlowController.RestartGame(this);
+    }
+
+    public void ExitToMainMenu()
+    {
+        isGameOver = true;
+        levelFlowController.ExitToMainMenu();
+    }
+
+    // --- End Sequence Delegates ---
+    private void HandleLevelLoaded()
+    {
+        isGameOver = false;
+        gameEndSequenceController.CancelEndSequence();
+    }
+
+    private void GameOver()
+    {
+        if (isGameOver) return;
+        gameEndSequenceController.PlayGameOverSequence(levelFlowController.CurrentBoardState, levelFlowController.CurrentBoardView);
+    }
+
+    private void GameWin()
+    {
+        if (isGameOver) return;
+        gameEndSequenceController.PlayGameWinSequence();
+    }
+
+    // --- Settings & UI Relays ---
+    public void OpenSettings()
+    {
+        PlayClick();
+        UpdateToggleButtonsUI();
+        uiPanelManager.ShowPanel(uiPanelManager.settingsPanel);
+    }
+
+    public void CloseSettings()
+    {
+        PlayClick();
+        uiPanelManager.HidePanel(uiPanelManager.settingsPanel, false);
+    }
+
+    public void OpenHowToPlay()
+    {
+        PlayClick();
+        uiPanelManager.ShowPanel(uiPanelManager.howToPlayPanel);
+    }
+
+    public void CloseHowToPlay()
+    {
+        PlayClick();
+        uiPanelManager.HidePanel(uiPanelManager.howToPlayPanel, false);
+    }
+
+    public void ToggleMusic()
+    {
+        audioManager.ToggleMusic();
+        UpdateToggleButtonsUI();
+    }
+
+    public void ToggleSFX()
+    {
+        audioManager.ToggleSFX();
+        UpdateToggleButtonsUI();
+    }
+
+    public void ToggleVibration()
+    {
+        settingsController.ToggleVibration(audioManager);
+        UpdateToggleButtonsUI();
+    }
+
+    public void UpdateToggleButtonsUI()
+    {
+        settingsController.UpdateToggleButtonsUI(audioManager.IsMusicMuted, audioManager.IsSFXMuted);
+    }
+
+    public void RestartFromSettings()
+    {
+        CloseSettings();
+        RestartGame();
+    }
+
+    // --- Board Interaction & Booster Processing ---
+    public void HandleCellClick(int row, int col)
+    {
+        inputController.HandleCellClick(row, col);
+    }
+}

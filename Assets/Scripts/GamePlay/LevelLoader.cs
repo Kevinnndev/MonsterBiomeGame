@@ -77,6 +77,12 @@ public class LevelLoader : MonoBehaviour
             return false;
         }
 
+        if (solutions.Count > 1)
+        {
+            Debug.LogError($"[LevelLoader] Level {levelIndex} CÓ NHIỀU NGHIỆM — đáp án không duy nhất, người chơi sẽ bị tính sai. Sửa file level (kiểm tra bằng Tools/Monster Biome/Check Level Solvability).");
+            return false;
+        }
+
         bool isBoardValid = boardView.InitializeBoard(gm, parsedGrid, rows, cols);
         if (!isBoardValid) return false;
 

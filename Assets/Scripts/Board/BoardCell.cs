@@ -19,16 +19,12 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
     private void Awake()
     {
+        if (cellSprite == null) cellSprite = GetComponent<SpriteRenderer>();
+        if (monsterSprite == null || markIcon == null)
+            Debug.LogError($"[BoardCell] monsterSprite or markIcon is not assigned on {name}.", this);
+
         markIconOriginalScale = markIcon.transform.localScale;
         markIcon.enabled = false;
-    }
-
-    private void OnDestroy()
-    {
-        transform.DOKill();
-        if (cellSprite != null) cellSprite.DOKill();
-        if (monsterSprite != null) monsterSprite.transform.DOKill();
-        if (markIcon != null) markIcon.transform.DOKill();
     }
 
     public void InitCell(int r, int c, System.Action<int, int> clickHandler, System.Func<bool> interactableCheck = null)
@@ -70,14 +66,14 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         if (canInteractCallback == null || canInteractCallback.Invoke())
         {
             transform.DOKill();
-            transform.DOScale(originalScale * 1.05f, 0.15f).SetEase(Ease.OutQuad);
+            transform.DOScale(originalScale * 1.05f, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
         }
     }
 
     private void OnMouseExit()
     {
         transform.DOKill();
-        transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad);
+        transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
     }
 
     public void SetupCell(int biomeID, Color biomeColor)
@@ -88,19 +84,16 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         if (biomeID == 0)
         {
             cellSprite.enabled = false;
-            if (col2D != null) col2D.enabled = false;
+            col2D.enabled = false;
         }
         else
         {
             cellSprite.enabled = true;
             cellSprite.color = color;
-            if (col2D != null)
+            col2D.enabled = true;
+            if (cellSprite.sprite != null)
             {
-                col2D.enabled = true;
-                if (cellSprite != null && cellSprite.sprite != null)
-                {
-                    col2D.size = cellSprite.sprite.rect.size / cellSprite.sprite.pixelsPerUnit;
-                }
+                col2D.size = cellSprite.sprite.rect.size / cellSprite.sprite.pixelsPerUnit;
             }
         }
         monsterSprite.enabled = false;
@@ -115,7 +108,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         {
             markIcon.enabled = true;
             markIcon.transform.localScale = Vector3.zero;
-            markIcon.transform.DOScale(markIconOriginalScale, 0.3f).SetEase(Ease.OutBack);
+            markIcon.transform.DOScale(markIconOriginalScale, 0.3f).SetEase(Ease.OutBack).SetLink(gameObject);
         }
         else
         {
@@ -126,8 +119,8 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         transform.DOKill(complete: true);
 
         Color targetColor = isMarked ? new Color(biomeColor.r, biomeColor.g, biomeColor.b, 0.4f) : new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
-        cellSprite.DOColor(targetColor, 0.15f).SetEase(Ease.OutQuad);
-        transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 2, 0.5f);
+        cellSprite.DOColor(targetColor, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
+        transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 2, 0.5f).SetLink(gameObject);
     }
 
     public void SetMonsterState(bool hasMonster, Sprite sprite, Color biomeColor)
@@ -136,7 +129,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         {
             monsterSprite.enabled = true;
             monsterSprite.color = Color.white;
-            if (cellSprite != null) monsterSprite.sortingOrder = cellSprite.sortingOrder + 1; // Force render on top
+            monsterSprite.sortingOrder = cellSprite.sortingOrder + 1;
             if (sprite != null) monsterSprite.sprite = sprite;
             markIcon.enabled = false;
 
@@ -150,14 +143,14 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
             monsterSprite.transform.localScale = Vector3.zero;
             monsterSprite.transform.DOKill();
-            monsterSprite.transform.DOScale(targetScale, 0.35f).SetEase(Ease.OutBack);
+            monsterSprite.transform.DOScale(targetScale, 0.35f).SetEase(Ease.OutBack).SetLink(gameObject);
         }
         else
         {
             if (monsterSprite.enabled)
             {
                 monsterSprite.transform.DOKill();
-                monsterSprite.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.InBack).OnComplete(() => {
+                monsterSprite.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.InBack).SetLink(gameObject).OnComplete(() => {
                     monsterSprite.enabled = false;
                 });
             }
@@ -168,6 +161,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
     {
         transform.DOKill();
         transform.DOShakePosition(0.4f, strength: new Vector3(0.1f, 0, 0), vibrato: 20, randomness: 90, snapping: false, fadeOut: true)
+            .SetLink(gameObject)
             .OnComplete(() => {
                 markIcon.enabled = false;
 
@@ -183,17 +177,17 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
 
                 monsterSprite.transform.localScale = Vector3.zero;
                 monsterSprite.transform.DOKill();
-                monsterSprite.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutBack);
+                monsterSprite.transform.DOScale(targetScale, 0.2f).SetEase(Ease.OutBack).SetLink(gameObject);
             });
     }
 
     private void ScaleSpriteToFit()
     {
-        if (monsterSprite == null || monsterSprite.sprite == null) return;
+        if (monsterSprite.sprite == null) return;
 
         monsterSprite.transform.localScale = Vector3.one;
 
-        if (cellSprite != null && cellSprite.sprite != null)
+        if (cellSprite.sprite != null)
         {
             Vector3 cellBounds = cellSprite.bounds.size;
             Vector3 monsterBounds = monsterSprite.bounds.size;

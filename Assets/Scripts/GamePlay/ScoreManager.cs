@@ -42,7 +42,7 @@ public class ScoreManager : MonoBehaviour
         DOTween.To(() => displayedScore, x => {
             displayedScore = x;
             scoreText.text = "ĐIỂM: " + x.ToString();
-        }, newScore, 0.4f).SetEase(Ease.OutQuad);
+        }, newScore, 0.4f).SetEase(Ease.OutQuad).SetTarget(scoreText.transform).SetLink(scoreText.gameObject);
         scoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0), 0.3f, 2, 0.5f);
     }
 }
