@@ -1,11 +1,12 @@
-// Contract: GameEndSequenceController handles win/lose end-game animations and panel displays.
+// Contract: GameEndSequenceController orchestrates win/lose end-game flow (timer, score bonus, panel order, timeScale).
+// All visual effects (tweens) live in GameEndSequenceFx.
 // Events:
 //   - OnGameOverTriggered: Raised when game over sequence begins so GameManager centralizes isGameOver = true.
 //   - OnGameWinTriggered: Raised when game win sequence begins so GameManager centralizes isGameOver = true.
 
 using System;
+using System.Collections;
 using UnityEngine;
-using DG.Tweening;
 using MonsterBiome.Core.Models;
 
 public class GameEndSequenceController : MonoBehaviour
@@ -24,21 +25,29 @@ public class GameEndSequenceController : MonoBehaviour
     public event Action OnGameOverTriggered;
     public event Action OnGameWinTriggered;
 
-    private Sequence activeEndSequence;
+    private GameEndSequenceFx fx;
+    private Coroutine gameOverTimeline;
+    private GameTheme theme;
 
     public void CancelEndSequence()
     {
-        activeEndSequence?.Kill();
-        activeEndSequence = null;
+        if (gameOverTimeline != null)
+        {
+            StopCoroutine(gameOverTimeline);
+            gameOverTimeline = null;
+        }
+        fx?.KillActiveEffects();
     }
 
-    public void Initialize(TimerController timer, AudioManager audio, UIPanelManager ui, LivesManager lives, ScoreManager score)
+    public void Initialize(TimerController timer, AudioManager audio, UIPanelManager ui, LivesManager lives, ScoreManager score, GameTheme gameTheme)
     {
         timerController = timer;
         audioManager = audio;
         uiPanelManager = ui;
         livesManager = lives;
         scoreManager = score;
+        theme = gameTheme;
+        fx = new GameEndSequenceFx(darkOverlay, gameOverCanvasGroup, gameObject);
     }
 
     public void PlayGameOverSequence(BoardState boardState, LevelBoardView currentBoardView)
@@ -49,57 +58,23 @@ public class GameEndSequenceController : MonoBehaviour
         audioManager.PlayLose();
 
         CancelEndSequence();
-        Sequence gameOverSeq = activeEndSequence = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+        fx.PlayGameOverEffects();
+        if (currentBoardView != null) currentBoardView.GrayOutAllMonsters(theme.loseGray);
 
-        if (Camera.main != null)
-        {
-            gameOverSeq.Insert(0, Camera.main.transform.DOShakePosition(0.3f, strength: 0.15f, vibrato: 10).SetUpdate(true));
-        }
+        gameOverTimeline = StartCoroutine(GameOverTimeline());
+    }
 
-        if (darkOverlay != null)
-        {
-            darkOverlay.gameObject.SetActive(true);
-            darkOverlay.alpha = 0f;
-            gameOverSeq.Insert(0, darkOverlay.DOFade(0.5f, 0.6f).SetEase(Ease.OutQuad).SetUpdate(true));
-        }
-
-        gameOverSeq.Insert(0, DOTween.To(() => Time.timeScale, x => Time.timeScale = x, 0.3f, 0.4f).SetUpdate(true));
-
-        if (boardState != null && currentBoardView != null)
-        {
-            for (int r = 0; r < boardState.Rows; r++)
-            {
-                for (int c = 0; c < boardState.Cols; c++)
-                {
-                    if (boardState.IsPlacedMonster(r, c))
-                    {
-                        BoardCell cell = currentBoardView.GetCell(r, c, boardState.Cols);
-                        if (cell != null && cell.monsterSprite != null)
-                        {
-                            gameOverSeq.Insert(0, cell.monsterSprite.DOColor(Color.gray, 0.4f).SetUpdate(true));
-                        }
-                    }
-                }
-            }
-        }
-
-        gameOverSeq.InsertCallback(0.8f, () => {
-            Time.timeScale = 1f;
-            ShowGameOverPanel();
-        });
+    private IEnumerator GameOverTimeline()
+    {
+        yield return new WaitForSecondsRealtime(0.8f);
+        gameOverTimeline = null;
+        Time.timeScale = 1f;
+        ShowGameOverPanel();
     }
 
     public void ShowGameOverPanel()
     {
-        uiPanelManager.gameOverUI.SetActive(true);
-        if (gameOverCanvasGroup != null)
-        {
-            gameOverCanvasGroup.alpha = 0f;
-            uiPanelManager.gameOverUI.transform.localScale = Vector3.one * 1.1f;
-            gameOverCanvasGroup.DOFade(1f, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(gameObject);
-            uiPanelManager.gameOverUI.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(gameObject);
-        }
-
+        fx.ShowGameOverPanel(uiPanelManager.gameOverUI);
         uiPanelManager.restartButton.SetActive(true);
     }
 

@@ -5,7 +5,7 @@ using MonsterBiome.Core.Models;
 public class BoardMoveExecutor : MonoBehaviour
 {
     [Header("Dependencies")]
-    [SerializeField] private BiomePalette biomePalette;
+    [SerializeField] private GameTheme theme;
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private LivesManager livesManager;
@@ -19,11 +19,11 @@ public class BoardMoveExecutor : MonoBehaviour
     private BoardState BoardState => boardStateProvider?.Invoke();
 
     public void Initialize(System.Func<BoardState> stateProvider, System.Func<LevelBoardView> viewProvider,
-        BiomePalette palette, AudioManager audio, ScoreManager score, LivesManager lives, SettingsController settings)
+        GameTheme gameTheme, AudioManager audio, ScoreManager score, LivesManager lives, SettingsController settings)
     {
         boardStateProvider = stateProvider;
         boardViewProvider = viewProvider;
-        biomePalette = palette;
+        theme = gameTheme;
         audioManager = audio;
         scoreManager = score;
         livesManager = lives;
@@ -45,7 +45,7 @@ public class BoardMoveExecutor : MonoBehaviour
         bool isMarked = state.ToggleMark(row, col);
         if (targetCell != null)
         {
-            targetCell.SetMarkState(isMarked, GetBiomeColor(biomeID));
+            targetCell.SetMarkState(isMarked, GetBiomeColor(biomeID), theme.markedCellAlpha);
         }
     }
 
@@ -68,7 +68,7 @@ public class BoardMoveExecutor : MonoBehaviour
 
             if (targetCell != null)
             {
-                targetCell.ShowErrorSprite(biomePalette.brokenHeartSprite);
+                targetCell.ShowErrorSprite(theme.brokenHeartSprite);
             }
             state.MarkError(row, col);
         }
@@ -110,6 +110,6 @@ public class BoardMoveExecutor : MonoBehaviour
         }
     }
 
-    private Color GetBiomeColor(int biomeID) => biomePalette.GetBiomeColor(biomeID);
-    private Sprite GetMonsterSprite(int biomeID) => biomePalette.GetMonsterSprite(biomeID);
+    private Color GetBiomeColor(int biomeID) => theme.GetBiomeColor(biomeID);
+    private Sprite GetMonsterSprite(int biomeID) => theme.GetMonsterSprite(biomeID);
 }

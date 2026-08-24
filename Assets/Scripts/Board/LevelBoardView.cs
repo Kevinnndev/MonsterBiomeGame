@@ -83,7 +83,7 @@ public class LevelBoardView : MonoBehaviour
                 if (cell != null)
                 {
                     cells[index] = cell;
-                    cell.InitCell(r, c, gm);
+                    cell.InitCell(r, c, gm.HandleCellClick, () => !gm.IsGameOver());
                     cell.SetupCell(biomeID, gm.GetBiomeColor(biomeID));
                 }
                 else
@@ -101,5 +101,14 @@ public class LevelBoardView : MonoBehaviour
         int index = (row * totalCols) + col;
         if (index < 0 || index >= cells.Length) return null;
         return cells[index];
+    }
+
+    public void GrayOutAllMonsters(Color grayColor)
+    {
+        if (cells == null) return;
+        foreach (BoardCell cell in cells)
+        {
+            if (cell != null) cell.GrayOutMonster(grayColor);
+        }
     }
 }

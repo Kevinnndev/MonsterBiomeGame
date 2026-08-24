@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     [Header("Modular Controllers")]
     [SerializeField] private LevelFlowController levelFlowController;
     [SerializeField] private GameEndSequenceController gameEndSequenceController;
-    [SerializeField] private BiomePalette biomePalette;
+    [SerializeField] private GameTheme theme;
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private UIPanelManager uiPanelManager;
     [SerializeField] private SettingsController settingsController;
@@ -36,8 +36,8 @@ public class GameManager : MonoBehaviour
     public int[,] cellMarks => boardState?.CellMarks;
     public int[,] errorCells => boardState?.ErrorCells;
 
-    public Color GetBiomeColor(int biomeID) => biomePalette.GetBiomeColor(biomeID);
-    public Sprite GetMonsterSprite(int biomeID) => biomePalette.GetMonsterSprite(biomeID);
+    public Color GetBiomeColor(int biomeID) => theme.GetBiomeColor(biomeID);
+    public Sprite GetMonsterSprite(int biomeID) => theme.GetMonsterSprite(biomeID);
     public bool IsGameOver() => isGameOver;
 
     private T GetOrAddComponent<T>() where T : Component
@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour
     {
         if (levelFlowController == null) levelFlowController = GetOrAddComponent<LevelFlowController>();
         if (gameEndSequenceController == null) gameEndSequenceController = GetOrAddComponent<GameEndSequenceController>();
-        if (biomePalette == null) biomePalette = GetOrAddComponent<BiomePalette>();
+        if (theme == null) Debug.LogError("[GameManager] GameTheme asset is not assigned in the Inspector.", this);
         if (audioManager == null) audioManager = GetOrAddComponent<AudioManager>();
         if (uiPanelManager == null) uiPanelManager = GetOrAddComponent<UIPanelManager>();
         if (settingsController == null) settingsController = GetOrAddComponent<SettingsController>();
@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour
 
         levelFlowController.Initialize(levelLoader, livesManager, scoreManager, uiPanelManager,
             boosterController, timerController, audioManager);
-        gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager);
+        gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager, theme);
         boosterController.Initialize(() => boardState, () => isGameOver, moveExecutor, timerController);
 
         timerController.OnTimerExpired += GameOver;
@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
         levelFlowController.OnLevelLoadedSuccessfully += HandleLevelLoaded;
 
         moveExecutor.Initialize(() => boardState, () => currentBoardView,
-            biomePalette, audioManager, scoreManager, livesManager, settingsController);
+            theme, audioManager, scoreManager, livesManager, settingsController);
         moveExecutor.OnBoardCompleted += GameWin;
 
         inputController.Initialize(() => boardState, () => isGameOver, boosterController);

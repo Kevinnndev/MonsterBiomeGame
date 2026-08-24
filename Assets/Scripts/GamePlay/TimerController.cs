@@ -8,6 +8,9 @@ public class TimerController : MonoBehaviour
     [Header("Timer Display")]
     public TextMeshProUGUI timerText;
 
+    [Header("Theme")]
+    [SerializeField] private GameTheme theme;
+
     private readonly TimerCore model = new TimerCore();
 
     public TimerCore Model => model;
@@ -23,14 +26,10 @@ public class TimerController : MonoBehaviour
 
     private int lastDisplayedSeconds = -1;
     private Color lastDisplayedColor = Color.clear;
-    private Color defaultTimerColor = Color.white;
 
     private void Awake()
     {
-        if (timerText)
-        {
-            defaultTimerColor = timerText.color;
-        }
+        if (theme == null) Debug.LogError("[TimerController] GameTheme asset is not assigned in the Inspector.", this);
         model.OnTimerTick += HandleTimerTick;
     }
 
@@ -71,7 +70,8 @@ public class TimerController : MonoBehaviour
     private void HandleTimerTick(float currentTime, bool isFrozen)
     {
         int secondsLeft = Mathf.CeilToInt(Mathf.Max(0, currentTime));
-        Color timerColor = isFrozen ? Color.cyan : (secondsLeft <= 5 ? Color.red : defaultTimerColor);
+        Color timerColor = isFrozen ? theme.timerFrozen
+            : (secondsLeft <= theme.timerWarningSeconds ? theme.timerWarning : theme.timerNormal);
         UpdateTimerDisplay(secondsLeft, timerColor);
     }
 

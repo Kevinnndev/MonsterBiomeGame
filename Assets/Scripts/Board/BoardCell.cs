@@ -36,11 +36,6 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         originalScale = Vector3.one;
     }
 
-    public void InitCell(int r, int c, GameManager gm)
-    {
-        InitCell(r, c, gm.HandleCellClick, () => !gm.IsGameOver());
-    }
-
     private int lastHandledFrame = -1;
 
     private void HandleClick()
@@ -100,7 +95,13 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         markIcon.enabled = false;
     }
 
-    public void SetMarkState(bool isMarked, Color biomeColor)
+    public void GrayOutMonster(Color grayColor)
+    {
+        if (!monsterSprite.enabled) return;
+        monsterSprite.DOColor(grayColor, 0.4f).SetUpdate(true).SetLink(gameObject);
+    }
+
+    public void SetMarkState(bool isMarked, Color biomeColor, float markedAlpha)
     {
         markIcon.transform.DOKill();
 
@@ -118,7 +119,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         cellSprite.DOKill();
         transform.DOKill(complete: true);
 
-        Color targetColor = isMarked ? new Color(biomeColor.r, biomeColor.g, biomeColor.b, 0.4f) : new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
+        Color targetColor = isMarked ? new Color(biomeColor.r, biomeColor.g, biomeColor.b, markedAlpha) : new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
         cellSprite.DOColor(targetColor, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
         transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 2, 0.5f).SetLink(gameObject);
     }
