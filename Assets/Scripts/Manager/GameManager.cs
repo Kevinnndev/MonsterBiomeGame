@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioManager audioManager;
     [SerializeField] private UIPanelManager uiPanelManager;
     [SerializeField] private SettingsController settingsController;
+    [SerializeField] private SettingsUIController settingsUIController;
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private LivesManager livesManager;
     [SerializeField] private TimerController timerController;
@@ -64,6 +65,7 @@ public class GameManager : MonoBehaviour
         if (audioManager == null) audioManager = GetOrAddComponent<AudioManager>();
         if (uiPanelManager == null) uiPanelManager = GetOrAddComponent<UIPanelManager>();
         if (settingsController == null) settingsController = GetOrAddComponent<SettingsController>();
+        if (settingsUIController == null) settingsUIController = GetOrAddComponent<SettingsUIController>();
         if (scoreManager == null) scoreManager = GetOrAddComponent<ScoreManager>();
         if (livesManager == null) livesManager = GetOrAddComponent<LivesManager>();
         if (timerController == null) timerController = GetOrAddComponent<TimerController>();
@@ -99,7 +101,6 @@ public class GameManager : MonoBehaviour
         inputController.ClickSoundRequested += PlayClick;
 
         uiPanelManager.InitializeUI();
-        UpdateToggleButtonsUI();
     }
 
     private void OnDestroy()
@@ -180,58 +181,10 @@ public class GameManager : MonoBehaviour
         gameEndSequenceController.PlayGameWinSequence();
     }
 
-    // --- Settings & UI Relays ---
-    public void OpenSettings()
-    {
-        PlayClick();
-        UpdateToggleButtonsUI();
-        uiPanelManager.ShowPanel(uiPanelManager.settingsPanel);
-    }
-
-    public void CloseSettings()
-    {
-        PlayClick();
-        uiPanelManager.HidePanel(uiPanelManager.settingsPanel, false);
-    }
-
-    public void OpenHowToPlay()
-    {
-        PlayClick();
-        uiPanelManager.ShowPanel(uiPanelManager.howToPlayPanel);
-    }
-
-    public void CloseHowToPlay()
-    {
-        PlayClick();
-        uiPanelManager.HidePanel(uiPanelManager.howToPlayPanel, false);
-    }
-
-    public void ToggleMusic()
-    {
-        audioManager.ToggleMusic();
-        UpdateToggleButtonsUI();
-    }
-
-    public void ToggleSFX()
-    {
-        audioManager.ToggleSFX();
-        UpdateToggleButtonsUI();
-    }
-
-    public void ToggleVibration()
-    {
-        settingsController.ToggleVibration(audioManager);
-        UpdateToggleButtonsUI();
-    }
-
-    public void UpdateToggleButtonsUI()
-    {
-        settingsController.UpdateToggleButtonsUI(audioManager.IsMusicMuted, audioManager.IsSFXMuted);
-    }
-
+    // --- Settings ---
     public void RestartFromSettings()
     {
-        CloseSettings();
+        settingsUIController.CloseSettings();
         RestartGame();
     }
 

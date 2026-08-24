@@ -1869,8 +1869,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: OpenSettings
         m_Mode: 1
         m_Arguments:
@@ -2003,8 +2003,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: CloseSettings
         m_Mode: 1
         m_Arguments:
@@ -3208,6 +3208,7 @@ GameObject:
   - component: {fileID: 668752751}
   - component: {fileID: 668752750}
   - component: {fileID: 668752749}
+  - component: {fileID: 668752758}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3231,6 +3232,7 @@ MonoBehaviour:
   audioManager: {fileID: 668752756}
   uiPanelManager: {fileID: 668752755}
   settingsController: {fileID: 668752754}
+  settingsUIController: {fileID: 668752758}
   scoreManager: {fileID: 668752753}
   livesManager: {fileID: 668752752}
   timerController: {fileID: 668752751}
@@ -3614,6 +3616,21 @@ MonoBehaviour:
   - {fileID: -6349360636359246829, guid: d2fa1b9ac7f4eb64292d53d9b078070b, type: 3}
   - {fileID: -2530001987011866503, guid: f08f47fd7fb1dcb40bbdf2f3d6a1cdec, type: 3}
   brokenHeartSprite: {fileID: 610179500776393223, guid: 5b2cf414d86d65644a8b1b0a0cd600f5, type: 3}
+--- !u!114 &668752758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668752744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d564bb3cc54c2e9d41889c9af8af72, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  audioManager: {fileID: 668752756}
+  settingsController: {fileID: 668752754}
+  uiPanelManager: {fileID: 668752755}
 --- !u!1 &705326961
 GameObject:
   m_ObjectHideFlags: 0
@@ -4520,8 +4537,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: ToggleSFX
         m_Mode: 1
         m_Arguments:
@@ -4792,8 +4809,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: ToggleVibration
         m_Mode: 1
         m_Arguments:
@@ -4924,8 +4941,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: CloseHowToPlay
         m_Mode: 0
         m_Arguments:
@@ -7920,8 +7937,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: ToggleMusic
         m_Mode: 1
         m_Arguments:
@@ -9255,8 +9272,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668752745}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+      - m_Target: {fileID: 668752758}
+        m_TargetAssemblyTypeName: SettingsUIController, Assembly-CSharp
         m_MethodName: OpenHowToPlay
         m_Mode: 1
         m_Arguments:
