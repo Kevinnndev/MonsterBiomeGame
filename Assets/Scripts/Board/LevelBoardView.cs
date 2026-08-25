@@ -67,17 +67,18 @@ public class LevelBoardView : MonoBehaviour
 
                 cellObj.transform.localScale = Vector3.zero;
 
-      
+
                 float targetScale = cellSize / maxCellSize;
                 cellObj.transform.DOScale(Vector3.one * targetScale, 0.4f)
                                  .SetEase(Ease.OutBack)
-                                 .SetDelay((r + c) * 0.03f);
+                                 .SetDelay((r + c) * 0.03f)
+                                 .SetLink(cellObj);
 
                 BoardCell cell = cellObj.GetComponent<BoardCell>();
                 if (cell != null)
                 {
                     cells[index] = cell;
-                    cell.InitCell(r, c, gm.HandleCellClick, () => !gm.IsGameOver());
+                    cell.InitCell(r, c, gm.HandleCellClick, () => !gm.IsGameOver(), Vector3.one * targetScale);
                     cell.SetupCell(biomeID, gm.GetBiomeColor(biomeID));
                 }
                 else

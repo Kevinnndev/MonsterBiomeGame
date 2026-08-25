@@ -83,6 +83,7 @@ namespace MonsterBiome.Core.Models
             if (IsInBounds(r, c))
             {
                 ErrorCells[r, c] = 1;
+                CellMarks[r, c] = 0;
             }
         }
 

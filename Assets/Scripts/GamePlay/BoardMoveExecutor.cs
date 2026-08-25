@@ -44,7 +44,7 @@ public class BoardMoveExecutor : MonoBehaviour
         bool isMarked = state.ToggleMark(row, col);
         if (targetCell != null)
         {
-            targetCell.SetMarkState(isMarked, GetBiomeColor(biomeID), theme.markedCellAlpha);
+            targetCell.SetMarkState(isMarked, theme.GetBiomeColor(biomeID), theme.markedCellAlpha);
         }
     }
 
@@ -83,7 +83,7 @@ public class BoardMoveExecutor : MonoBehaviour
         BoardCell targetCell = GetCellOrNull(row, col, state.Cols);
         if (targetCell != null)
         {
-            targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
+            targetCell.SetMonsterState(true, theme.GetMonsterSprite(biomeID), theme.GetBiomeColor(biomeID));
         }
 
         scoreManager.AddScore(theme.scorePerMonster);
@@ -105,10 +105,8 @@ public class BoardMoveExecutor : MonoBehaviour
         BoardCell targetCell = GetCellOrNull(row, col, state.Cols);
         if (targetCell != null)
         {
-            targetCell.SetMonsterState(false, null, Color.white);
+            targetCell.SetMonsterState(false, null, theme.GetBiomeColor(state.GridData[row, col]));
         }
     }
 
-    private Color GetBiomeColor(int biomeID) => theme.GetBiomeColor(biomeID);
-    private Sprite GetMonsterSprite(int biomeID) => theme.GetMonsterSprite(biomeID);
 }

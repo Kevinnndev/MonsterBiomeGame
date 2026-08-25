@@ -3208,6 +3208,8 @@ GameObject:
   - component: {fileID: 668752750}
   - component: {fileID: 668752749}
   - component: {fileID: 668752758}
+  - component: {fileID: 668752760}
+  - component: {fileID: 668752761}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3237,9 +3239,47 @@ MonoBehaviour:
   timerController: {fileID: 668752751}
   levelLoader: {fileID: 668752750}
   boosterController: {fileID: 668752749}
-  currentLevel: 0
+  levelFlowController: {fileID: 668752760}
+  gameEndSequenceController: {fileID: 668752761}
+--- !u!114 &668752760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668752744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d16edc0a6f6f8c4fa137b6c4230d5e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelLoader: {fileID: 668752750}
+  livesManager: {fileID: 668752752}
+  scoreManager: {fileID: 668752753}
+  uiPanelManager: {fileID: 668752755}
+  boosterController: {fileID: 668752749}
+  timerController: {fileID: 668752751}
+  audioManager: {fileID: 668752756}
+  theme: {fileID: 11400000, guid: 9c696ca00a674bb3a301c5ddec6d1802, type: 2}
+--- !u!114 &668752761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668752744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24693918e79cee74e9051b21409b1cda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   darkOverlay: {fileID: 0}
   gameOverCanvasGroup: {fileID: 0}
+  timerController: {fileID: 668752751}
+  audioManager: {fileID: 668752756}
+  uiPanelManager: {fileID: 668752755}
+  livesManager: {fileID: 668752752}
+  scoreManager: {fileID: 668752753}
 --- !u!4 &668752746
 Transform:
   m_ObjectHideFlags: 0
@@ -3485,9 +3525,6 @@ MonoBehaviour:
   - {fileID: 5176708772863828885, guid: d7a7c4a77623c6345b8193110f981ca3, type: 3}
   - {fileID: 5176708772863828885, guid: bd65ea4bc073aed43be42d9bd2e38db4, type: 3}
   - {fileID: 5176708772863828885, guid: 3c8974e43d326104aa1a7c714bd72cb9, type: 3}
-  - {fileID: 5176708772863828885, guid: 951d20d1d22a6264f8778ca3b91b3532, type: 3}
-  - {fileID: 5176708772863828885, guid: 57f71a34a3be722458282e5c4ec87af5, type: 3}
-  - {fileID: 5176708772863828885, guid: 3e4981c40d34969439b4fc6033c35035, type: 3}
   boardContainer: {fileID: 8859418}
   levelTitleText: {fileID: 1893688405}
 --- !u!114 &668752751

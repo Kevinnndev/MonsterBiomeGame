@@ -30,13 +30,6 @@ namespace MonsterBiome.Core.Models
             OnTimerTick?.Invoke(CurrentTime, true);
         }
 
-        public void ResetTimerState()
-        {
-            IsTimerRunning = false;
-            FreezeTimeRemaining = 0f;
-            CurrentTime = 0f;
-        }
-
         public void Tick(float deltaTime)
         {
             if (FreezeTimeRemaining > 0f)

@@ -73,7 +73,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a837cca7ee201b34f8aba04a8e3ba4d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelTextFile: {fileID: 0}
+  levelTextFile: {fileID: 4900000, guid: c239fcf5b74bbd64482307af15bb0270, type: 3}
+  timeLimitSeconds: 60
   maxCellSize: 1.2
   screenFillRatio: 0.85
   cellPrefab: {fileID: 2161465841645006862, guid: d6823fd435194cb4383dfac8fe52a637, type: 3}

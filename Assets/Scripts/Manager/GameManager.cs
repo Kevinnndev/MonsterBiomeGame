@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using MonsterBiome.Core.Models;
 
 [DefaultExecutionOrder(-50)]
@@ -70,8 +69,6 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        EnsureModularComponents();
-
         levelFlowController.Initialize(levelLoader, livesManager, scoreManager, uiPanelManager,
             boosterController, timerController, audioManager, theme);
         gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager, theme);
@@ -88,10 +85,10 @@ public class GameManager : MonoBehaviour
         moveExecutor.OnBoardCompleted += GameWin;
 
         inputController.Initialize(() => boardState, () => isGameOver, boosterController);
-        inputController.PlaceRequested += HandlePlaceRequested;
-        inputController.MarkRequested += HandleMarkRequested;
-        inputController.RemoveRequested += HandleRemoveRequested;
-        inputController.ClickSoundRequested += PlayClick;
+        inputController.PlaceRequested += moveExecutor.TryPlaceMonster;
+        inputController.MarkRequested += moveExecutor.ToggleMark;
+        inputController.RemoveRequested += moveExecutor.RemoveMonster;
+        inputController.ClickSoundRequested += audioManager.PlayClick;
 
         uiPanelManager.InitializeUI();
     }
@@ -102,30 +99,10 @@ public class GameManager : MonoBehaviour
         livesManager.OnLivesDepleted -= GameOver;
 
         moveExecutor.OnBoardCompleted -= GameWin;
-        inputController.PlaceRequested -= HandlePlaceRequested;
-        inputController.MarkRequested -= HandleMarkRequested;
-        inputController.RemoveRequested -= HandleRemoveRequested;
-        inputController.ClickSoundRequested -= PlayClick;
-    }
-
-    private void HandlePlaceRequested(int row, int col, int biomeID)
-    {
-        moveExecutor.TryPlaceMonster(row, col, biomeID);
-    }
-
-    private void HandleMarkRequested(int row, int col, int biomeID)
-    {
-        moveExecutor.ToggleMark(row, col, biomeID);
-    }
-
-    private void HandleRemoveRequested(int row, int col)
-    {
-        moveExecutor.RemoveMonster(row, col);
-    }
-
-    private void PlayClick()
-    {
-        audioManager.PlayClick();
+        inputController.PlaceRequested -= moveExecutor.TryPlaceMonster;
+        inputController.MarkRequested -= moveExecutor.ToggleMark;
+        inputController.RemoveRequested -= moveExecutor.RemoveMonster;
+        inputController.ClickSoundRequested -= audioManager.PlayClick;
     }
 
     // --- Level Flow Delegates ---

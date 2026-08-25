@@ -79,12 +79,21 @@ public class BoosterController : MonoBehaviour
             Debug.LogError($"[BoosterController] Booster buttons are not fully assigned on {name}. Assign them in the Inspector.", this);
         }
 
-        BindButton(findOneBtn, HandleFindOneBtnClick);
-        BindButton(freezeTimeBtn, HandleFreezeTimeBtnClick);
-        BindButton(rocketBtn, HandleRocketBtnClick);
-        BindButton(bowBtn, HandleBowBtnClick);
+        BindPunchAndClick(findOneBtn, () => model.OnClickFindOne(IsGameOver()));
+        BindPunchAndClick(freezeTimeBtn, () => model.OnClickFreezeTime(IsGameOver()));
+        BindPunchAndClick(rocketBtn, () => model.OnClickRocket(IsGameOver()));
+        BindPunchAndClick(bowBtn, () => model.OnClickBow(IsGameOver()));
 
         UpdateBoosterUI();
+    }
+
+    private void BindPunchAndClick(Button btn, Action onClick)
+    {
+        BindButton(btn, () =>
+        {
+            ButtonFx.Punch(btn.transform);
+            onClick();
+        });
     }
 
     private void BindButton(Button btn, UnityEngine.Events.UnityAction action)
@@ -94,38 +103,13 @@ public class BoosterController : MonoBehaviour
         {
             btn.targetGraphic.raycastTarget = true;
         }
-        btn.onClick.RemoveListener(action);
+        btn.onClick.RemoveAllListeners();
         btn.onClick.AddListener(action);
     }
 
     private bool IsGameOver() => gameOverProvider != null && gameOverProvider.Invoke();
 
-    private void HandleFindOneBtnClick()
-    {
-        ButtonFx.Punch(findOneBtn.transform);
-        model.OnClickFindOne(IsGameOver());
-    }
-
-    private void HandleFreezeTimeBtnClick()
-    {
-        ButtonFx.Punch(freezeTimeBtn.transform);
-        model.OnClickFreezeTime(IsGameOver());
-    }
-
-    private void HandleRocketBtnClick()
-    {
-        ButtonFx.Punch(rocketBtn.transform);
-        model.OnClickRocket(IsGameOver());
-    }
-
-    private void HandleBowBtnClick()
-    {
-        ButtonFx.Punch(bowBtn.transform);
-        model.OnClickBow(IsGameOver());
-    }
-
     public void HandleCellClickWithBooster(int row, int col) => model.HandleCellClickWithBooster(row, col);
-    public void ClearActiveBooster() => model.ClearActiveBooster();
 
     public void UpdateBoosterUI()
     {

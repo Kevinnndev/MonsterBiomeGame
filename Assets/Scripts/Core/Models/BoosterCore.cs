@@ -42,7 +42,7 @@ namespace MonsterBiome.Core.Models
         public void OnClickFindOne(bool isGameOver)
         {
             if (FindOneCount <= 0 || isGameOver) return;
-            
+
             BoardState state = boardStateProvider?.Invoke();
             if (state == null) return;
 
@@ -53,8 +53,7 @@ namespace MonsterBiome.Core.Models
 
             if (TryAutoPlaceInScope(state, allCells))
             {
-                FindOneCount--;
-                if (FindOneCount < 0) FindOneCount = 0;
+                FindOneCount = Math.Max(0, FindOneCount - 1);
                 OnBoosterCountsChanged?.Invoke();
             }
         }
@@ -62,8 +61,7 @@ namespace MonsterBiome.Core.Models
         public void OnClickFreezeTime(bool isGameOver)
         {
             if (FreezeTimeCount <= 0 || isGameOver) return;
-            FreezeTimeCount--;
-            if (FreezeTimeCount < 0) FreezeTimeCount = 0;
+            FreezeTimeCount = Math.Max(0, FreezeTimeCount - 1);
             OnBoosterCountsChanged?.Invoke();
             OnAddFreezeTimeRequested?.Invoke();
         }
@@ -88,11 +86,8 @@ namespace MonsterBiome.Core.Models
             if (state == null) return;
 
             BoosterType usedBooster = ActiveBooster;
-            if (usedBooster == BoosterType.Rocket) RocketCount--;
-            else if (usedBooster == BoosterType.Bow) BowCount--;
-            
-            if (RocketCount < 0) RocketCount = 0;
-            if (BowCount < 0) BowCount = 0;
+            if (usedBooster == BoosterType.Rocket) RocketCount = Math.Max(0, RocketCount - 1);
+            else if (usedBooster == BoosterType.Bow) BowCount = Math.Max(0, BowCount - 1);
 
             ActiveBooster = BoosterType.None;
             OnBoosterCountsChanged?.Invoke();
@@ -160,11 +155,6 @@ namespace MonsterBiome.Core.Models
                 }
             }
             return false;
-        }
-
-        public void ClearActiveBooster()
-        {
-            ActiveBooster = BoosterType.None;
         }
     }
 }

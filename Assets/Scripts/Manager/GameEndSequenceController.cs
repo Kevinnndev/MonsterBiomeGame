@@ -86,7 +86,7 @@ public class GameEndSequenceController : MonoBehaviour
         ShowGameOverPanel();
     }
 
-    public void ShowGameOverPanel()
+    private void ShowGameOverPanel()
     {
         fx.ShowGameOverPanel(uiPanelManager.gameOverUI);
         uiPanelManager.restartButton.SetActive(true);

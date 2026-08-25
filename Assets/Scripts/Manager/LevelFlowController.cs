@@ -1,7 +1,6 @@
 // Contract: LevelFlowController manages level lifecycle (Load, Clear, Next, Restart, Exit).
 // Events:
 //   - OnLevelLoadedSuccessfully: Raised whenever a level is successfully loaded so GameManager resets isGameOver = false.
-//   - OnReturnToMainMenu: Raised when exiting to the main menu.
 
 using System;
 using UnityEngine;
@@ -30,7 +29,6 @@ public class LevelFlowController : MonoBehaviour
     public LevelBoardView CurrentBoardView => currentBoardView;
 
     public event Action OnLevelLoadedSuccessfully;
-    public event Action OnReturnToMainMenu;
 
     public void Initialize(LevelLoader loader, LivesManager lives, ScoreManager score, UIPanelManager ui,
         BoosterController booster, TimerController timer, AudioManager audio, GameTheme gameTheme)
@@ -106,6 +104,5 @@ public class LevelFlowController : MonoBehaviour
         uiPanelManager.ShowMainMenuUI();
 
         ClearCurrentBoard();
-        OnReturnToMainMenu?.Invoke();
     }
 }

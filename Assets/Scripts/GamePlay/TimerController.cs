@@ -19,9 +19,6 @@ public class TimerController : MonoBehaviour
         remove => model.OnTimerExpired -= value;
     }
 
-    public bool IsTimerRunning => model.IsTimerRunning;
-    public float FreezeTimeRemaining => model.FreezeTimeRemaining;
-
     private int lastDisplayedSeconds = -1;
     private Color lastDisplayedColor = Color.clear;
 
@@ -51,13 +48,6 @@ public class TimerController : MonoBehaviour
     public void AddFreezeTime(float seconds)
     {
         model.AddFreezeTime(seconds);
-    }
-
-    public void ResetTimerState()
-    {
-        lastDisplayedSeconds = -1;
-        lastDisplayedColor = Color.clear;
-        model.ResetTimerState();
     }
 
     private void Update()

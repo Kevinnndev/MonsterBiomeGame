@@ -11,8 +11,6 @@ public class ScoreManager : MonoBehaviour
     private readonly ScoreCore model = new ScoreCore();
     private int displayedScore = 0;
 
-    public int CurrentScore => model.CurrentScore;
-
     private void Awake()
     {
         model.OnScoreChanged += HandleScoreChanged;
