@@ -32,8 +32,6 @@ public class GameEndSequenceFx
             darkOverlay.alpha = 0f;
             activeSequence.Insert(0, darkOverlay.DOFade(0.5f, 0.6f).SetEase(Ease.OutQuad).SetUpdate(true));
         }
-
-        activeSequence.Insert(0, DOTween.To(() => Time.timeScale, x => Time.timeScale = x, 0.3f, 0.4f).SetUpdate(true));
     }
 
     public void ShowGameOverPanel(GameObject gameOverUI)

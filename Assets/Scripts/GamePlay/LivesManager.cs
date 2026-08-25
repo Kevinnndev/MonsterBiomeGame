@@ -9,8 +9,6 @@ public class LivesManager : MonoBehaviour
 
     private readonly LivesCore model = new LivesCore();
 
-    public LivesCore Model => model;
-
     public event Action OnLivesDepleted
     {
         add => model.OnLivesDepleted += value;

@@ -13,8 +13,6 @@ public class TimerController : MonoBehaviour
 
     private readonly TimerCore model = new TimerCore();
 
-    public TimerCore Model => model;
-
     public event Action OnTimerExpired
     {
         add => model.OnTimerExpired += value;

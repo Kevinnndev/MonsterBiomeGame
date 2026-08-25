@@ -27,7 +27,6 @@ public class LevelFlowController : MonoBehaviour
 
     public BoardState CurrentBoardState => boardState;
     public LevelBoardView CurrentBoardView => currentBoardView;
-    public GameObject CurrentBoardInstance => currentBoardInstance;
 
     public event Action OnLevelLoadedSuccessfully;
     public event Action OnReturnToMainMenu;

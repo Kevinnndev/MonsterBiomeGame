@@ -24,12 +24,6 @@ public class LevelBoardView : MonoBehaviour
 
     public bool InitializeBoard(GameManager gm, int[,] parsedGrid, int requiredRows, int requiredCols)
     {
-
-        foreach (Transform child in transform)
-        {
-            Destroy(child.gameObject);
-        }
-
         if (cellPrefab == null)
         {
             Debug.LogError("[LevelBoardView] cellPrefab chưa được gán!");

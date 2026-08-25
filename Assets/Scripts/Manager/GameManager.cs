@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using MonsterBiome.Core.Models;
 
 [DefaultExecutionOrder(-50)]
@@ -29,12 +28,6 @@ public class GameManager : MonoBehaviour
     public int currentLevel => levelFlowController.currentLevel;
     public BoardState boardState => levelFlowController.CurrentBoardState;
     public LevelBoardView currentBoardView => levelFlowController.CurrentBoardView;
-
-    public int[,] gridData => boardState?.GridData;
-    public bool[,] solutionCells => boardState?.SolutionCells;
-    public int[,] placedMonsters => boardState?.PlacedMonsters;
-    public int[,] cellMarks => boardState?.CellMarks;
-    public int[,] errorCells => boardState?.ErrorCells;
 
     public Color GetBiomeColor(int biomeID) => theme.GetBiomeColor(biomeID);
     public Sprite GetMonsterSprite(int biomeID) => theme.GetMonsterSprite(biomeID);

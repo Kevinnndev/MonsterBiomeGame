@@ -29,6 +29,10 @@ public class GameEndSequenceController : MonoBehaviour
     private Coroutine gameOverTimeline;
     private GameTheme theme;
 
+    private const float SlowMoDuration = 0.4f;
+    private const float SlowMoScale = 0.3f;
+    private const float GameOverPanelDelay = 0.8f;
+
     public void CancelEndSequence()
     {
         if (gameOverTimeline != null)
@@ -66,9 +70,19 @@ public class GameEndSequenceController : MonoBehaviour
 
     private IEnumerator GameOverTimeline()
     {
-        yield return new WaitForSecondsRealtime(0.8f);
-        gameOverTimeline = null;
+        float elapsed = 0f;
+        while (elapsed < SlowMoDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            Time.timeScale = Mathf.Lerp(1f, SlowMoScale, Mathf.Clamp01(elapsed / SlowMoDuration));
+            yield return null;
+        }
+        Time.timeScale = SlowMoScale;
+
+        yield return new WaitForSecondsRealtime(GameOverPanelDelay - SlowMoDuration);
+
         Time.timeScale = 1f;
+        gameOverTimeline = null;
         ShowGameOverPanel();
     }
 

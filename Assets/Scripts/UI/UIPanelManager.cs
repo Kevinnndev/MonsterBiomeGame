@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -114,17 +113,5 @@ public class UIPanelManager : MonoBehaviour
         panel.transform.DOKill();
         panel.transform.localScale = Vector3.zero;
         panel.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
-    }
-
-    private void DisableNonButtonRaycastTargets(GameObject root)
-    {
-        if (root == null) return;
-        foreach (var graphic in root.GetComponentsInChildren<Graphic>(true))
-        {
-            if (graphic.GetComponentInParent<Button>() == null)
-            {
-                graphic.raycastTarget = false;
-            }
-        }
     }
 }

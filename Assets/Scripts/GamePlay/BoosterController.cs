@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 using MonsterBiome.Core.Models;
 
 public class BoosterController : MonoBehaviour
@@ -20,11 +20,8 @@ public class BoosterController : MonoBehaviour
     [SerializeField] private TimerController timerController;
 
     private Func<bool> gameOverProvider;
-    private Tween delayedPlaceTween;
+    private Coroutine delayedPlaceRoutine;
 
-    public BoosterCore Model => model;
-    
-    // Properties passed-through for existing UI/Systems that might read them
     public BoosterType ActiveBooster => model.ActiveBooster;
 
     private void Awake()
@@ -47,8 +44,11 @@ public class BoosterController : MonoBehaviour
         model.OnToggleMarkRequested -= HandleToggleMark;
         model.OnBoosterAnimationRequested -= HandleBoosterAnimation;
 
-        delayedPlaceTween?.Kill();
-        delayedPlaceTween = null;
+        if (delayedPlaceRoutine != null)
+        {
+            StopCoroutine(delayedPlaceRoutine);
+            delayedPlaceRoutine = null;
+        }
     }
 
     public void Initialize(Func<BoardState> stateProvider, Func<bool> gameOverCheck, BoardMoveExecutor executor, TimerController timer)
@@ -100,25 +100,25 @@ public class BoosterController : MonoBehaviour
 
     private void HandleFindOneBtnClick()
     {
-        findOneBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        ButtonFx.Punch(findOneBtn.transform);
         model.OnClickFindOne(IsGameOver());
     }
 
     private void HandleFreezeTimeBtnClick()
     {
-        freezeTimeBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        ButtonFx.Punch(freezeTimeBtn.transform);
         model.OnClickFreezeTime(IsGameOver());
     }
 
     private void HandleRocketBtnClick()
     {
-        rocketBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        ButtonFx.Punch(rocketBtn.transform);
         model.OnClickRocket(IsGameOver());
     }
 
     private void HandleBowBtnClick()
     {
-        bowBtn.transform.DOPunchScale(new Vector3(0.15f, 0.15f, 0), 0.2f, 2, 0.5f);
+        ButtonFx.Punch(bowBtn.transform);
         model.OnClickBow(IsGameOver());
     }
 
@@ -152,12 +152,15 @@ public class BoosterController : MonoBehaviour
 
     private void HandleBoosterAnimation(int r, int c, BoosterType type, Action onComplete)
     {
-        delayedPlaceTween?.Kill();
-        delayedPlaceTween = DOVirtual.DelayedCall(0.4f, () =>
-        {
-            delayedPlaceTween = null;
-            if (IsGameOver()) return;
-            onComplete?.Invoke();
-        });
+        if (delayedPlaceRoutine != null) StopCoroutine(delayedPlaceRoutine);
+        delayedPlaceRoutine = StartCoroutine(DelayedPlaceTimeline(onComplete));
+    }
+
+    private IEnumerator DelayedPlaceTimeline(Action onComplete)
+    {
+        yield return new WaitForSeconds(0.4f);
+        delayedPlaceRoutine = null;
+        if (IsGameOver()) yield break;
+        onComplete?.Invoke();
     }
 }
