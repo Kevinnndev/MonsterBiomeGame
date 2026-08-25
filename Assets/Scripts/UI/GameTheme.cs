@@ -18,6 +18,15 @@ public class GameTheme : ScriptableObject
     [Range(0f, 1f)] public float markedCellAlpha = 0.4f;
     public Color loseGray = Color.gray;
 
+    [Header("Scoring")]
+    public int scorePerMonster = 100;
+    public int winBonus = 500;
+    public int scorePerRemainingLife = 100;
+
+    [Header("Lives & Boosters")]
+    public int startingLives = 3;
+    public float freezeTimeSeconds = 15f;
+
     private void OnValidate()
     {
         if (biomeColors == null || monsterSprites == null) return;

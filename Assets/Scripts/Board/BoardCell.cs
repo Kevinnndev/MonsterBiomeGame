@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using DG.Tweening;
 
 [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
-public class BoardCell : MonoBehaviour, IPointerDownHandler
+public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public SpriteRenderer cellSprite;
     public SpriteRenderer monsterSprite;
@@ -51,12 +51,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         HandleClick();
     }
 
-    private void OnMouseDown()
-    {
-        HandleClick();
-    }
-
-    private void OnMouseEnter()
+    public void OnPointerEnter(PointerEventData eventData)
     {
         if (canInteractCallback == null || canInteractCallback.Invoke())
         {
@@ -65,7 +60,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler
         }
     }
 
-    private void OnMouseExit()
+    public void OnPointerExit(PointerEventData eventData)
     {
         transform.DOKill();
         transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);

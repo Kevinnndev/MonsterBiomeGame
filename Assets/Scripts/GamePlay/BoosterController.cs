@@ -18,6 +18,7 @@ public class BoosterController : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private BoardMoveExecutor moveExecutor;
     [SerializeField] private TimerController timerController;
+    [SerializeField] private GameTheme theme;
 
     private Func<bool> gameOverProvider;
     private Coroutine delayedPlaceRoutine;
@@ -51,12 +52,13 @@ public class BoosterController : MonoBehaviour
         }
     }
 
-    public void Initialize(Func<BoardState> stateProvider, Func<bool> gameOverCheck, BoardMoveExecutor executor, TimerController timer)
+    public void Initialize(Func<BoardState> stateProvider, Func<bool> gameOverCheck, BoardMoveExecutor executor, TimerController timer, GameTheme gameTheme)
     {
         gameOverProvider = gameOverCheck;
         moveExecutor = executor;
         timerController = timer;
-        
+        theme = gameTheme;
+
         model.Initialize(stateProvider);
     }
 
@@ -135,9 +137,9 @@ public class BoosterController : MonoBehaviour
 
     // --- Action Handlers from Model ---
     
-    private void HandleAddFreezeTime(float amount)
+    private void HandleAddFreezeTime()
     {
-        timerController?.AddFreezeTime(amount);
+        timerController.AddFreezeTime(theme.freezeTimeSeconds);
     }
 
     private void HandlePlaceMonster(int row, int col, int biomeID)
@@ -150,7 +152,7 @@ public class BoosterController : MonoBehaviour
         moveExecutor?.ToggleMark(row, col, biomeID);
     }
 
-    private void HandleBoosterAnimation(int r, int c, BoosterType type, Action onComplete)
+    private void HandleBoosterAnimation(Action onComplete)
     {
         if (delayedPlaceRoutine != null) StopCoroutine(delayedPlaceRoutine);
         delayedPlaceRoutine = StartCoroutine(DelayedPlaceTimeline(onComplete));

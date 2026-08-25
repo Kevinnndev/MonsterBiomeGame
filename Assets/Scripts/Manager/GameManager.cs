@@ -73,9 +73,9 @@ public class GameManager : MonoBehaviour
         EnsureModularComponents();
 
         levelFlowController.Initialize(levelLoader, livesManager, scoreManager, uiPanelManager,
-            boosterController, timerController, audioManager);
+            boosterController, timerController, audioManager, theme);
         gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager, theme);
-        boosterController.Initialize(() => boardState, () => isGameOver, moveExecutor, timerController);
+        boosterController.Initialize(() => boardState, () => isGameOver, moveExecutor, timerController, theme);
 
         timerController.OnTimerExpired += GameOver;
         livesManager.OnLivesDepleted += GameOver;

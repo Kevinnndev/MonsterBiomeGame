@@ -10,7 +10,7 @@ using MonsterBiome.Core.Models;
 public class LevelFlowController : MonoBehaviour
 {
     [Header("Level Configuration")]
-    public int currentLevel = 0;
+    public int currentLevel { get; private set; } = 0;
 
     [Header("Dependencies")]
     [SerializeField] private LevelLoader levelLoader;
@@ -24,6 +24,7 @@ public class LevelFlowController : MonoBehaviour
     private BoardState boardState;
     private LevelBoardView currentBoardView;
     private GameObject currentBoardInstance;
+    private GameTheme theme;
 
     public BoardState CurrentBoardState => boardState;
     public LevelBoardView CurrentBoardView => currentBoardView;
@@ -32,7 +33,7 @@ public class LevelFlowController : MonoBehaviour
     public event Action OnReturnToMainMenu;
 
     public void Initialize(LevelLoader loader, LivesManager lives, ScoreManager score, UIPanelManager ui,
-        BoosterController booster, TimerController timer, AudioManager audio)
+        BoosterController booster, TimerController timer, AudioManager audio, GameTheme gameTheme)
     {
         levelLoader = loader;
         livesManager = lives;
@@ -41,16 +42,15 @@ public class LevelFlowController : MonoBehaviour
         boosterController = booster;
         timerController = timer;
         audioManager = audio;
+        theme = gameTheme;
     }
 
     public void StartGame(GameManager gm)
     {
         audioManager.PlayClick();
-        uiPanelManager.ShowLevelUI();
+        scoreManager.ResetScore();
 
         currentLevel = 0;
-        livesManager.ResetLives(3);
-        scoreManager.ResetScore();
         LoadLevel(currentLevel, gm);
     }
 
@@ -62,7 +62,7 @@ public class LevelFlowController : MonoBehaviour
         uiPanelManager.ShowLevelUI();
         boosterController.EnsureBoosterButtons();
 
-        livesManager.ResetLives(3);
+        livesManager.ResetLives(theme.startingLives);
         ClearCurrentBoard();
 
         bool success = levelLoader.LoadLevel(currentLevel, gm, out boardState, out currentBoardView, out currentBoardInstance);
@@ -96,7 +96,6 @@ public class LevelFlowController : MonoBehaviour
         audioManager.PlayClick();
         scoreManager.ResetScore();
 
-        uiPanelManager.ShowLevelUI();
         LoadLevel(currentLevel, gm);
     }
 

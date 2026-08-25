@@ -99,7 +99,7 @@ public class GameEndSequenceController : MonoBehaviour
         timerController.StopTimer();
 
         int livesLeft = livesManager.Lives;
-        scoreManager.AddScore(500 + (livesLeft * 100));
+        scoreManager.AddScore(theme.winBonus + livesLeft * theme.scorePerRemainingLife);
 
         uiPanelManager.winScreenUI.SetActive(true);
         uiPanelManager.ShowPopupScale(uiPanelManager.winScreenUI);

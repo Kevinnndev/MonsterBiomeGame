@@ -15,12 +15,12 @@ namespace MonsterBiome.Core.Models
         public BoosterType ActiveBooster { get; private set; } = BoosterType.None;
 
         public event Action OnBoosterCountsChanged;
-        
+
         // Actions to interface with the View / MoveExecutor / Timer
-        public event Action<float> OnAddFreezeTimeRequested;
+        public event Action OnAddFreezeTimeRequested;
         public event Action<int, int, int> OnPlaceMonsterRequested;
         public event Action<int, int, int> OnToggleMarkRequested;
-        public event Action<int, int, BoosterType, Action> OnBoosterAnimationRequested;
+        public event Action<Action> OnBoosterAnimationRequested;
 
         private Func<BoardState> boardStateProvider;
 
@@ -65,7 +65,7 @@ namespace MonsterBiome.Core.Models
             FreezeTimeCount--;
             if (FreezeTimeCount < 0) FreezeTimeCount = 0;
             OnBoosterCountsChanged?.Invoke();
-            OnAddFreezeTimeRequested?.Invoke(15f);
+            OnAddFreezeTimeRequested?.Invoke();
         }
 
         public void OnClickRocket(bool isGameOver)
@@ -134,14 +134,14 @@ namespace MonsterBiome.Core.Models
                 var (r, c) = correctCell.Value;
                 BoardState capturedState = state;
                 
-                Action onAnimationComplete = () => 
+                Action onAnimationComplete = () =>
                 {
                     BoardState current = boardStateProvider?.Invoke();
                     if (current == null || current != capturedState) return;
                     TryAutoPlaceInScope(current, new List<(int, int)> { (r, c) });
                 };
 
-                OnBoosterAnimationRequested?.Invoke(r, c, usedBooster, onAnimationComplete);
+                OnBoosterAnimationRequested?.Invoke(onAnimationComplete);
             }
         }
 

@@ -86,7 +86,7 @@ public class BoardMoveExecutor : MonoBehaviour
             targetCell.SetMonsterState(true, GetMonsterSprite(biomeID), GetBiomeColor(biomeID));
         }
 
-        scoreManager.AddScore(100);
+        scoreManager.AddScore(theme.scorePerMonster);
         audioManager.PlayPlaceMonster();
 
         if (state.PlacedMonstersCount >= state.CountTotalSolutionCells())

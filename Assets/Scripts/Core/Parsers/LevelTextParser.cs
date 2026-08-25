@@ -48,7 +48,8 @@ namespace MonsterBiome.Core.Parsers
                     }
                     else
                     {
-                        columns[j] = 0;
+                        throw new InvalidOperationException(
+                            $"Lỗi Parse: Token '{rawValues[j]}' tại hàng {i + 1}, cột {j + 1} không phải số hợp lệ.");
                     }
                 }
 
