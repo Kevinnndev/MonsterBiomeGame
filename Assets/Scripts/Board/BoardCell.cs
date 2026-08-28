@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using DG.Tweening;
 
 [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
 public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
@@ -11,11 +10,13 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandle
     [Header("Mark Visual (Sprite)")]
     [SerializeField] private SpriteRenderer markIcon;
 
+    private BoardCellFx fx;
     private int row, col;
     private System.Action<int, int> onClickCallback;
     private System.Func<bool> canInteractCallback;
     private Vector3 originalScale;
-    private Vector3 markIconOriginalScale;
+
+    private int lastHandledFrame = -1;
 
     private void Awake()
     {
@@ -23,7 +24,7 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandle
         if (monsterSprite == null || markIcon == null)
             Debug.LogError($"[BoardCell] monsterSprite or markIcon is not assigned on {name}.", this);
 
-        markIconOriginalScale = markIcon.transform.localScale;
+        fx = new BoardCellFx(cellSprite, monsterSprite, markIcon, transform);
         markIcon.enabled = false;
     }
 
@@ -35,8 +36,6 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandle
         canInteractCallback = interactableCheck;
         originalScale = initialScale;
     }
-
-    private int lastHandledFrame = -1;
 
     private void HandleClick()
     {
@@ -55,15 +54,13 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandle
     {
         if (canInteractCallback == null || canInteractCallback.Invoke())
         {
-            transform.DOKill();
-            transform.DOScale(originalScale * 1.05f, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
+            fx.Hover(originalScale);
         }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        transform.DOKill();
-        transform.DOScale(originalScale, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
+        fx.Unhover(originalScale);
     }
 
     public void SetupCell(int biomeID, Color biomeColor)
@@ -92,90 +89,45 @@ public class BoardCell : MonoBehaviour, IPointerDownHandler, IPointerEnterHandle
 
     public void GrayOutMonster(Color grayColor)
     {
-        if (!monsterSprite.enabled) return;
-        monsterSprite.DOColor(grayColor, 0.4f).SetUpdate(true).SetLink(gameObject);
+        fx.GrayMonster(grayColor);
+    }
+
+    public void RestoreMonsterColor()
+    {
+        fx.RestoreMonsterColor();
     }
 
     public void SetMarkState(bool isMarked, Color biomeColor, float markedAlpha)
     {
-        markIcon.transform.DOKill();
-
-        if (isMarked)
-        {
-            markIcon.enabled = true;
-            markIcon.transform.localScale = Vector3.zero;
-            markIcon.transform.DOScale(markIconOriginalScale, 0.3f).SetEase(Ease.OutBack).SetLink(gameObject);
-        }
-        else
-        {
-            markIcon.enabled = false;
-        }
-
-        cellSprite.DOKill();
-        transform.DOKill(complete: true);
-
-        Color targetColor = isMarked ? new Color(biomeColor.r, biomeColor.g, biomeColor.b, markedAlpha) : new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
-        cellSprite.DOColor(targetColor, 0.15f).SetEase(Ease.OutQuad).SetLink(gameObject);
-        transform.DOPunchScale(Vector3.one * 0.08f, 0.15f, 2, 0.5f).SetLink(gameObject);
+        if (isMarked) fx.Mark(biomeColor, markedAlpha);
+        else fx.Unmark(biomeColor);
     }
 
     public void SetMonsterState(bool hasMonster, Sprite sprite, Color biomeColor)
     {
-        cellSprite.DOKill();
-        cellSprite.color = new Color(biomeColor.r, biomeColor.g, biomeColor.b, 1f);
-        markIcon.enabled = false;
-
         if (hasMonster)
         {
             monsterSprite.enabled = true;
             monsterSprite.color = Color.white;
             monsterSprite.sortingOrder = cellSprite.sortingOrder + 1;
             if (sprite != null) monsterSprite.sprite = sprite;
-
-            AnimateMonsterIn(0.35f);
+            ScaleSpriteToFit();
+            fx.ShowMonster(biomeColor, 0.35f);
         }
         else
         {
-            if (monsterSprite.enabled)
-            {
-                monsterSprite.transform.DOKill();
-                monsterSprite.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.InBack).SetLink(gameObject).OnComplete(() => {
-                    monsterSprite.enabled = false;
-                });
-            }
+            fx.HideMonster(biomeColor);
         }
     }
 
-    public void ShowErrorSprite(Sprite errorSprite)
+    public void ShowErrorSprite(Sprite errorSprite, Color biomeColor)
     {
-        cellSprite.DOKill();
-        Color cellColor = cellSprite.color;
-        cellColor.a = 1f;
-        cellSprite.color = cellColor;
-
-        markIcon.enabled = false;
-        monsterSprite.enabled = true;
         if (errorSprite != null) monsterSprite.sprite = errorSprite;
-        AnimateMonsterIn(0.2f);
-
-        transform.DOKill();
-        transform.DOShakePosition(0.4f, strength: new Vector3(0.1f, 0, 0), vibrato: 20, randomness: 90, snapping: false, fadeOut: true)
-            .SetLink(gameObject);
-    }
-
-    private void AnimateMonsterIn(float duration)
-    {
+        monsterSprite.enabled = true;
+        monsterSprite.color = Color.white;
+        monsterSprite.sortingOrder = cellSprite.sortingOrder + 1;
         ScaleSpriteToFit();
-
-        Vector3 targetScale = monsterSprite.transform.localScale;
-        if (targetScale.x <= 0.001f || targetScale.y <= 0.001f)
-        {
-            targetScale = Vector3.one * 0.8f;
-        }
-
-        monsterSprite.transform.localScale = Vector3.zero;
-        monsterSprite.transform.DOKill();
-        monsterSprite.transform.DOScale(targetScale, duration).SetEase(Ease.OutBack).SetLink(gameObject);
+        fx.ShowError(biomeColor, 0.2f);
     }
 
     private void ScaleSpriteToFit()

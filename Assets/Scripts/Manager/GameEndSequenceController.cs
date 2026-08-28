@@ -9,6 +9,12 @@ using System.Collections;
 using UnityEngine;
 using MonsterBiome.Core.Models;
 
+public enum GameOverReason
+{
+    OutOfTime,
+    OutOfLife
+}
+
 public class GameEndSequenceController : MonoBehaviour
 {
     [Header("Game Over Effects")]
@@ -24,10 +30,12 @@ public class GameEndSequenceController : MonoBehaviour
 
     public event Action OnGameOverTriggered;
     public event Action OnGameWinTriggered;
+    public event Action OnContinueTriggered;
 
     private GameEndSequenceFx fx;
     private Coroutine gameOverTimeline;
     private GameTheme theme;
+    private GameOverReason lastGameOverReason;
 
     private const float SlowMoDuration = 0.4f;
     private const float SlowMoScale = 0.3f;
@@ -51,24 +59,27 @@ public class GameEndSequenceController : MonoBehaviour
         livesManager = lives;
         scoreManager = score;
         theme = gameTheme;
-        fx = new GameEndSequenceFx(darkOverlay, gameOverCanvasGroup, gameObject);
+        fx = new GameEndSequenceFx(darkOverlay, gameOverCanvasGroup);
     }
 
-    public void PlayGameOverSequence(BoardState boardState, LevelBoardView currentBoardView)
+    public void PlayGameOverSequence(GameOverReason reason, BoardState boardState, LevelBoardView currentBoardView)
     {
+        lastGameOverReason = reason;
         OnGameOverTriggered?.Invoke();
 
-        timerController.StopTimer();
-        audioManager.PlayLose();
+        if (timerController != null) timerController.StopTimer();
+        if (audioManager != null) audioManager.PlayLose();
 
         CancelEndSequence();
+        fx ??= new GameEndSequenceFx(darkOverlay, gameOverCanvasGroup);
         fx.PlayGameOverEffects();
-        if (currentBoardView != null) currentBoardView.GrayOutAllMonsters(theme.loseGray);
+        if (currentBoardView != null && theme != null) currentBoardView.GrayOutAllMonsters(theme.loseGray);
 
-        gameOverTimeline = StartCoroutine(GameOverTimeline());
+        gameOverTimeline = StartCoroutine(GameOverTimeline(reason));
     }
 
-    private IEnumerator GameOverTimeline()
+
+    private IEnumerator GameOverTimeline(GameOverReason reason)
     {
         float elapsed = 0f;
         while (elapsed < SlowMoDuration)
@@ -83,14 +94,61 @@ public class GameEndSequenceController : MonoBehaviour
 
         Time.timeScale = 1f;
         gameOverTimeline = null;
-        ShowGameOverPanel();
+        ShowGameOverPanel(reason);
     }
 
-    private void ShowGameOverPanel()
+    private void ShowGameOverPanel(GameOverReason reason)
     {
-        fx.ShowGameOverPanel(uiPanelManager.gameOverUI);
-        uiPanelManager.restartButton.SetActive(true);
+        if (uiPanelManager == null) return;
+
+        GameObject targetPanel = reason == GameOverReason.OutOfTime
+            ? uiPanelManager.gameOverOutOfTimeUI
+            : uiPanelManager.gameOverOutOfLifeUI;
+
+        if (targetPanel != null)
+        {
+            targetPanel.SetActive(true);
+            uiPanelManager.ShowPopupScale(targetPanel);
+        }
+
+        uiPanelManager.DimGameUI();
+
+        if (uiPanelManager.restartButton != null) uiPanelManager.restartButton.SetActive(true);
     }
+
+
+    public void ContinueGame(LevelBoardView currentBoardView)
+    {
+        CancelEndSequence();
+
+        // Hide the active game over panel
+        GameObject activePanel = lastGameOverReason == GameOverReason.OutOfTime
+            ? uiPanelManager.gameOverOutOfTimeUI
+            : uiPanelManager.gameOverOutOfLifeUI;
+        fx.HideGameOverPanel(activePanel);
+        fx.HideGameOverEffects();
+
+        if (uiPanelManager != null) uiPanelManager.RestoreGameUI(0.3f);
+
+        if (uiPanelManager?.restartButton != null) uiPanelManager.restartButton.SetActive(false);
+
+        // Restore monster visuals
+        if (currentBoardView != null) currentBoardView.RestoreAllMonsters();
+
+        // Apply continue logic based on reason
+        if (lastGameOverReason == GameOverReason.OutOfLife)
+        {
+            livesManager.ResetLives(theme.startingLives);
+            timerController.ResumeTimer();
+        }
+        else // OutOfTime
+        {
+            timerController.AddTime(60f);
+        }
+
+        OnContinueTriggered?.Invoke();
+    }
+
 
     public void PlayGameWinSequence()
     {
@@ -103,6 +161,7 @@ public class GameEndSequenceController : MonoBehaviour
 
         uiPanelManager.winScreenUI.SetActive(true);
         uiPanelManager.ShowPopupScale(uiPanelManager.winScreenUI);
+        uiPanelManager.DimGameUI();
 
         uiPanelManager.restartButton.SetActive(false);
         uiPanelManager.nextLevelButton.SetActive(true);

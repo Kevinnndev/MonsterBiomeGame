@@ -1,13 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public class UIPanelManager : MonoBehaviour
 {
     [Header("Panels & UI References")]
     public GameObject mainMenuUI;
     public GameObject settingsPanel;
-    public GameObject gameOverUI;
+    public GameObject settingScreen;
+    public GameObject gameOverOutOfTimeUI;
+    public GameObject gameOverOutOfLifeUI;
     public GameObject winScreenUI;
     public GameObject restartButton;
     public GameObject nextLevelButton;
@@ -19,7 +20,9 @@ public class UIPanelManager : MonoBehaviour
     {
         mainMenuUI.SetActive(true);
         settingsPanel.SetActive(false);
-        gameOverUI.SetActive(false);
+        if (settingScreen) settingScreen.SetActive(false);
+        gameOverOutOfTimeUI.SetActive(false);
+        gameOverOutOfLifeUI.SetActive(false);
         winScreenUI.SetActive(false);
         restartButton.SetActive(false);
         nextLevelButton.SetActive(false);
@@ -32,7 +35,9 @@ public class UIPanelManager : MonoBehaviour
     {
         ReportIfMissing(mainMenuUI, nameof(mainMenuUI));
         ReportIfMissing(settingsPanel, nameof(settingsPanel));
-        ReportIfMissing(gameOverUI, nameof(gameOverUI));
+        ReportIfMissing(settingScreen, nameof(settingScreen));
+        ReportIfMissing(gameOverOutOfTimeUI, nameof(gameOverOutOfTimeUI));
+        ReportIfMissing(gameOverOutOfLifeUI, nameof(gameOverOutOfLifeUI));
         ReportIfMissing(winScreenUI, nameof(winScreenUI));
         ReportIfMissing(restartButton, nameof(restartButton));
         ReportIfMissing(nextLevelButton, nameof(nextLevelButton));
@@ -49,7 +54,9 @@ public class UIPanelManager : MonoBehaviour
     public void ShowMainMenuUI()
     {
         settingsPanel.SetActive(false);
-        gameOverUI.SetActive(false);
+        if (settingScreen) settingScreen.SetActive(false);
+        gameOverOutOfTimeUI.SetActive(false);
+        gameOverOutOfLifeUI.SetActive(false);
         winScreenUI.SetActive(false);
         topBarPanel.SetActive(false);
         boosterPanel.SetActive(false);
@@ -62,56 +69,72 @@ public class UIPanelManager : MonoBehaviour
     {
         mainMenuUI.SetActive(false);
         settingsPanel.SetActive(false);
-        gameOverUI.SetActive(false);
+        if (settingScreen) settingScreen.SetActive(false);
+        gameOverOutOfTimeUI.SetActive(false);
+        gameOverOutOfLifeUI.SetActive(false);
         winScreenUI.SetActive(false);
         howToPlayPanel.SetActive(false);
         restartButton.SetActive(false);
         nextLevelButton.SetActive(false);
         topBarPanel.SetActive(true);
         boosterPanel.SetActive(true);
+        RestoreGameUI(0f);
     }
 
     public void ShowPanel(GameObject panel)
     {
+        Animations.Current.Kill(panel.transform);
+        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+        if (cg != null) Animations.Current.Kill(cg);
+
         panel.SetActive(true);
         RectTransform rect = panel.GetComponent<RectTransform>();
-        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
-        rect.DOKill();
         rect.anchoredPosition = new Vector2(0, 800);
-        rect.DOAnchorPos(Vector2.zero, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
+        Animations.Current.MoveAnchor(rect, Vector2.zero, 0.4f, AnimationEase.OutBack, unscaled: true);
         if (cg != null)
         {
-            cg.DOKill();
             cg.alpha = 0f;
-            cg.DOFade(1f, 0.4f).SetUpdate(true);
+            Animations.Current.FadeTo(cg, 1f, 0.4f, unscaled: true);
         }
     }
 
-    public void HidePanel(GameObject panel, bool resumeTime)
+    public void HidePanel(GameObject panel)
     {
         RectTransform rect = panel.GetComponent<RectTransform>();
         CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+        Animations.Current.Kill(rect);
+        if (cg != null) Animations.Current.Kill(cg);
 
-        Sequence seq = DOTween.Sequence().SetUpdate(true);
-        rect.DOKill();
-        seq.Join(rect.DOAnchorPos(new Vector2(0, -800), 0.3f).SetEase(Ease.InBack));
-        if (cg != null)
-        {
-            cg.DOKill();
-            seq.Join(cg.DOFade(0f, 0.3f));
-        }
-
-        seq.OnComplete(() => {
-            panel.SetActive(false);
-            if (resumeTime) Time.timeScale = 1f;
-        });
+        Animations.Current.MoveAnchor(rect, new Vector2(0, -800), 0.3f, AnimationEase.InBack, unscaled: true,
+            onComplete: () => panel.SetActive(false));
     }
 
     public void ShowPopupScale(GameObject panel)
     {
+        Animations.Current.Kill(panel.transform);
         panel.SetActive(true);
-        panel.transform.DOKill();
         panel.transform.localScale = Vector3.zero;
-        panel.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
+        Animations.Current.ScaleTo(panel.transform, Vector3.one, 0.4f, AnimationEase.OutBack, unscaled: true);
+    }
+
+    public void DimGameUI(float targetAlpha = 0.3f, float duration = 0.4f)
+    {
+        FadeCanvasGroup(topBarPanel, targetAlpha, duration);
+        FadeCanvasGroup(boosterPanel, targetAlpha, duration);
+    }
+
+    public void RestoreGameUI(float duration = 0.3f)
+    {
+        FadeCanvasGroup(topBarPanel, 1f, duration);
+        FadeCanvasGroup(boosterPanel, 1f, duration);
+    }
+
+    private void FadeCanvasGroup(GameObject panel, float targetAlpha, float duration)
+    {
+        if (panel == null) return;
+        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+        if (cg == null) cg = panel.AddComponent<CanvasGroup>();
+        Animations.Current.Kill(cg);
+        Animations.Current.FadeTo(cg, targetAlpha, duration, unscaled: true);
     }
 }

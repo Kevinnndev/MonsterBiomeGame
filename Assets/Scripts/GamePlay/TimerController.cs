@@ -13,6 +13,10 @@ public class TimerController : MonoBehaviour
 
     private readonly TimerCore model = new TimerCore();
 
+    public bool IsRunning => model.IsTimerRunning;
+    public bool IsPaused => model.IsPaused;
+
+
     public event Action OnTimerExpired
     {
         add => model.OnTimerExpired += value;
@@ -45,9 +49,24 @@ public class TimerController : MonoBehaviour
         model.StopTimer();
     }
 
+    public void PauseTimer()
+    {
+        model.PauseTimer();
+    }
+
+    public void ResumeTimer()
+    {
+        model.ResumeTimer();
+    }
+
     public void AddFreezeTime(float seconds)
     {
         model.AddFreezeTime(seconds);
+    }
+
+    public void AddTime(float seconds)
+    {
+        model.AddTime(seconds);
     }
 
     private void Update()

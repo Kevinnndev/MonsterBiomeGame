@@ -1,2 +1,21 @@
 fileFormatVersion: 2
 guid: 8acc9477a0d29af4dbb33a2ea36d5a35
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - mainMenuUI: {instanceID: 0}
+  - settingsPanel: {instanceID: 0}
+  - gameOverOutOfTimeUI: {fileID: 3000518729623255868, guid: dc191994bfe979343b4f70341d379f4a, type: 3}
+  - gameOverOutOfLifeUI: {fileID: 8470160327456308334, guid: 34fd92e8cf88e8643ac90d4cb91e250a, type: 3}
+  - winScreenUI: {instanceID: 0}
+  - restartButton: {instanceID: 0}
+  - nextLevelButton: {instanceID: 0}
+  - topBarPanel: {instanceID: 0}
+  - howToPlayPanel: {instanceID: 0}
+  - boosterPanel: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

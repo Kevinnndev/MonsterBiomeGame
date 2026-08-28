@@ -67,7 +67,7 @@ public class BoardMoveExecutor : MonoBehaviour
 
             if (targetCell != null)
             {
-                targetCell.ShowErrorSprite(theme.brokenHeartSprite);
+                targetCell.ShowErrorSprite(theme.brokenHeartSprite, theme.GetBiomeColor(state.GridData[row, col]));
             }
             state.MarkError(row, col);
         }

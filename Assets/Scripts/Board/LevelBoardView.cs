@@ -1,5 +1,4 @@
 using UnityEngine;
-using DG.Tweening; 
 
 public class LevelBoardView : MonoBehaviour
 {
@@ -69,10 +68,8 @@ public class LevelBoardView : MonoBehaviour
 
 
                 float targetScale = cellSize / maxCellSize;
-                cellObj.transform.DOScale(Vector3.one * targetScale, 0.4f)
-                                 .SetEase(Ease.OutBack)
-                                 .SetDelay((r + c) * 0.03f)
-                                 .SetLink(cellObj);
+                Animations.Current.ScaleTo(cellObj.transform, Vector3.one * targetScale, 0.4f,
+                    AnimationEase.OutBack, delay: (r + c) * 0.03f);
 
                 BoardCell cell = cellObj.GetComponent<BoardCell>();
                 if (cell != null)
@@ -104,6 +101,15 @@ public class LevelBoardView : MonoBehaviour
         foreach (BoardCell cell in cells)
         {
             if (cell != null) cell.GrayOutMonster(grayColor);
+        }
+    }
+
+    public void RestoreAllMonsters()
+    {
+        if (cells == null) return;
+        foreach (BoardCell cell in cells)
+        {
+            if (cell != null) cell.RestoreMonsterColor();
         }
     }
 }

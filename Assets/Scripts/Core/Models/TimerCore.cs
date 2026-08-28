@@ -7,6 +7,7 @@ namespace MonsterBiome.Core.Models
         public float CurrentTime { get; private set; }
         public float FreezeTimeRemaining { get; private set; }
         public bool IsTimerRunning { get; private set; }
+        public bool IsPaused { get; private set; }
 
         public event Action OnTimerExpired;
         public event Action<float, bool> OnTimerTick; // (currentTime, isFrozen)
@@ -15,6 +16,7 @@ namespace MonsterBiome.Core.Models
         {
             CurrentTime = durationSeconds;
             FreezeTimeRemaining = 0f;
+            IsPaused = false;
             IsTimerRunning = true;
             OnTimerTick?.Invoke(CurrentTime, false);
         }
@@ -22,6 +24,27 @@ namespace MonsterBiome.Core.Models
         public void StopTimer()
         {
             IsTimerRunning = false;
+        }
+
+        public void PauseTimer()
+        {
+            IsPaused = true;
+        }
+
+        public void ResumeTimer()
+        {
+            IsPaused = false;
+        }
+
+        public void AddTime(float seconds)
+        {
+            CurrentTime += seconds;
+            if (!IsTimerRunning)
+            {
+                IsTimerRunning = true;
+                IsPaused = false;
+            }
+            OnTimerTick?.Invoke(CurrentTime, FreezeTimeRemaining > 0f);
         }
 
         public void AddFreezeTime(float seconds)
@@ -32,6 +55,8 @@ namespace MonsterBiome.Core.Models
 
         public void Tick(float deltaTime)
         {
+            if (IsPaused) return;
+
             if (FreezeTimeRemaining > 0f)
             {
                 FreezeTimeRemaining -= deltaTime;

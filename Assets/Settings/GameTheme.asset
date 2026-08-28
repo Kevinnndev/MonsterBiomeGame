@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b4b438284ad7402ba871bc5d397b7a9c, type: 3}
-  m_Name: DefaultGameTheme
+  m_Name: GameTheme
   m_EditorClassIdentifier: 
   biomeColors:
   - {r: 0, g: 0, b: 0, a: 0}
@@ -21,19 +21,26 @@ MonoBehaviour:
   - {r: 0.9019608, g: 0.9019608, b: 0.98039216, a: 0}
   - {r: 0.12993227, g: 0.78612536, b: 0.87169814, a: 0}
   - {r: 0.7132075, g: 0.13391493, b: 0.052481227, a: 0}
+  - {r: 0.4593078, g: 0.82641506, b: 0.0982342, a: 0}
   monsterSprites:
   - {fileID: 0}
   - {fileID: 4938544129547000730, guid: eb0f8f583e9dafc478e95a49addde7be, type: 3}
   - {fileID: -8014388334595859063, guid: 70e92bc26e86e7846b2514d0be6040a9, type: 3}
   - {fileID: 6905259006867371753, guid: 93bf3fd240dc72344b060244cb23a186, type: 3}
   - {fileID: -5628045285073719756, guid: 23a2d908a14b5b54c8fa9a01db60656e, type: 3}
-  - {fileID: 3734837636968736963, guid: 4013047e778d4be419288d157fcc2944, type: 3}
+  - {fileID: -429890163646538327, guid: 702ef907632054346bd59a1383ef0e96, type: 3}
   - {fileID: -6349360636359246829, guid: d2fa1b9ac7f4eb64292d53d9b078070b, type: 3}
   - {fileID: -2530001987011866503, guid: f08f47fd7fb1dcb40bbdf2f3d6a1cdec, type: 3}
+  - {fileID: 5433622002025520568, guid: 40a69a19cb2b39440a98717b4f87cde3, type: 3}
   brokenHeartSprite: {fileID: 610179500776393223, guid: 5b2cf414d86d65644a8b1b0a0cd600f5, type: 3}
-  timerNormal: {r: 0.06415099, g: 0.05797797, b: 0.05797797, a: 1}
+  timerNormal: {r: 1, g: 1, b: 1, a: 1}
   timerWarning: {r: 1, g: 0, b: 0, a: 1}
   timerFrozen: {r: 0, g: 1, b: 1, a: 1}
   timerWarningSeconds: 5
   markedCellAlpha: 0.4
   loseGray: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  scorePerMonster: 100
+  winBonus: 500
+  scorePerRemainingLife: 100
+  startingLives: 3
+  freezeTimeSeconds: 15

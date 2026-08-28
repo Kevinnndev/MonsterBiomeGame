@@ -1,6 +1,5 @@
 using UnityEngine;
 using TMPro;
-using DG.Tweening;
 using MonsterBiome.Core.Models;
 
 public class ScoreManager : MonoBehaviour
@@ -35,11 +34,12 @@ public class ScoreManager : MonoBehaviour
     private void HandleScoreChanged(int newScore)
     {
         if (scoreText == null) return;
-        scoreText.transform.DOKill(true);
-        DOTween.To(() => displayedScore, x => {
-            displayedScore = x;
-            scoreText.text = "ĐIỂM: " + x.ToString();
-        }, newScore, 0.4f).SetEase(Ease.OutQuad).SetTarget(scoreText.transform).SetLink(scoreText.gameObject);
-        scoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0), 0.3f, 2, 0.5f);
+        Animations.Current.Kill(scoreText.transform, complete: true);
+        float from = displayedScore;
+        Animations.Current.ValueTo(scoreText.transform, from, newScore, 0.4f, x => {
+            displayedScore = Mathf.RoundToInt(x);
+            scoreText.text = "ĐIỂM: " + displayedScore.ToString();
+        });
+        Animations.Current.PunchScale(scoreText.transform, new Vector3(0.1f, 0.1f, 0f), 0.3f);
     }
 }

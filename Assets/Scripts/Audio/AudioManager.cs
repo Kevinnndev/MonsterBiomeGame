@@ -19,6 +19,16 @@ public class AudioManager : MonoBehaviour
     public bool IsMusicMuted => isMusicMuted;
     public bool IsSFXMuted => isSFXMuted;
 
+    private void Awake()
+    {
+        // Restore persisted audio state
+        isMusicMuted = PlayerPrefs.GetInt("MusicOff", 0) == 1;
+        isSFXMuted = PlayerPrefs.GetInt("SFXOff", 0) == 1;
+
+        if (bgmSource) bgmSource.mute = isMusicMuted;
+        if (sfxSource) sfxSource.mute = isSFXMuted;
+    }
+
     public void PlaySFX(AudioClip clip)
     {
         if (sfxSource && clip) sfxSource.PlayOneShot(clip);
@@ -35,6 +45,8 @@ public class AudioManager : MonoBehaviour
         PlayClick();
         isMusicMuted = !isMusicMuted;
         if (bgmSource) bgmSource.mute = isMusicMuted;
+        PlayerPrefs.SetInt("MusicOff", isMusicMuted ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     public void ToggleSFX()
@@ -42,5 +54,7 @@ public class AudioManager : MonoBehaviour
         isSFXMuted = !isSFXMuted;
         if (sfxSource) sfxSource.mute = isSFXMuted;
         if (!isSFXMuted) PlayClick();
+        PlayerPrefs.SetInt("SFXOff", isSFXMuted ? 1 : 0);
+        PlayerPrefs.Save();
     }
 }

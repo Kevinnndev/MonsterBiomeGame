@@ -74,10 +74,11 @@ public class GameManager : MonoBehaviour
         gameEndSequenceController.Initialize(timerController, audioManager, uiPanelManager, livesManager, scoreManager, theme);
         boosterController.Initialize(() => boardState, () => isGameOver, moveExecutor, timerController, theme);
 
-        timerController.OnTimerExpired += GameOver;
-        livesManager.OnLivesDepleted += GameOver;
+        timerController.OnTimerExpired += GameOverOutOfTime;
+        livesManager.OnLivesDepleted += GameOverOutOfLife;
         gameEndSequenceController.OnGameOverTriggered += () => isGameOver = true;
         gameEndSequenceController.OnGameWinTriggered += () => isGameOver = true;
+        gameEndSequenceController.OnContinueTriggered += () => isGameOver = false;
         levelFlowController.OnLevelLoadedSuccessfully += HandleLevelLoaded;
 
         moveExecutor.Initialize(() => boardState, () => currentBoardView,
@@ -95,8 +96,8 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        timerController.OnTimerExpired -= GameOver;
-        livesManager.OnLivesDepleted -= GameOver;
+        timerController.OnTimerExpired -= GameOverOutOfTime;
+        livesManager.OnLivesDepleted -= GameOverOutOfLife;
 
         moveExecutor.OnBoardCompleted -= GameWin;
         inputController.PlaceRequested -= moveExecutor.TryPlaceMonster;
@@ -139,10 +140,21 @@ public class GameManager : MonoBehaviour
         gameEndSequenceController.CancelEndSequence();
     }
 
-    private void GameOver()
+    private void GameOverOutOfTime()
     {
         if (isGameOver) return;
-        gameEndSequenceController.PlayGameOverSequence(levelFlowController.CurrentBoardState, levelFlowController.CurrentBoardView);
+        gameEndSequenceController.PlayGameOverSequence(GameOverReason.OutOfTime, levelFlowController.CurrentBoardState, levelFlowController.CurrentBoardView);
+    }
+
+    private void GameOverOutOfLife()
+    {
+        if (isGameOver) return;
+        gameEndSequenceController.PlayGameOverSequence(GameOverReason.OutOfLife, levelFlowController.CurrentBoardState, levelFlowController.CurrentBoardView);
+    }
+
+    public void ContinueGame()
+    {
+        gameEndSequenceController.ContinueGame(levelFlowController.CurrentBoardView);
     }
 
     private void GameWin()
